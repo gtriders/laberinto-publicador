@@ -1,0 +1,9 @@
+{
+  "name": "Laberinto Publicador",
+  "short_name": "Publicador",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#111827",
+  "description": "Planificador y reutilizador de contenido para marcas Adrià y Laberinto Digital."
+}
