@@ -26,7 +26,7 @@
     <div class="ai-grid">
       <label class="upload-zone" id="aiUploadZone"><input id="aiFile" type="file" accept="image/jpeg,image/png,image/webp" hidden><div id="aiUploadContent"><strong>Subir foto</strong><p class="helper">Toca aquí o arrastra una imagen</p></div></label>
       <div class="ai-controls">
-        <div class="ai-row"><label>Marca<select id="aiBrand"><option value="adria-sushi">Adrià Sushi</option><option value="adria-sangucheria">Sanguchería Adrià</option><option value="pet">Adrià PET</option><option value="laberinto-digital">Laberinto Digital</option></select></label><label>Idea opcional<input id="aiContext" type="text" placeholder="Ej: promover delivery, evento, producto..."></label></div>
+        <div class="ai-row"><label>Marca<select id="aiBrand"><option value="adria-sushi">Adrià Sushi</option><option value="adria-sangucheria">Sanguchería Adrià</option><option value="pet">Adrià PET</option><option value="chef-rafael">Chef Rafael</option><option value="laberinto-digital">Laberinto Digital</option></select></label><label>Idea opcional<input id="aiContext" type="text" placeholder="Ej: promover delivery, evento, producto..."></label></div>
         <div class="ai-actions"><button id="aiAnalyzeBtn" class="btn primary" type="button" disabled>Analizar foto con IA</button><button id="aiConfigBtn" class="btn secondary" type="button">Configurar IA</button><span id="aiStatus" class="ai-status">Primero sube una foto.</span></div>
         <label>Título<input id="aiTitle" type="text" maxlength="120" placeholder="La IA propondrá uno"></label>
         <label>Texto listo para publicar<textarea id="aiCaption" placeholder="Aquí aparecerá el copy. Puedes editarlo antes de programar."></textarea></label>
@@ -65,7 +65,8 @@
       const data=await api({action:'status'});
       const ai=$('#aiReadyBadge'), ig=$('#igReadyBadge');
       ai.textContent=data.ai_ready?'IA lista':'Falta API IA'; ai.className='ai-badge '+(data.ai_ready?'ok':'warn');
-      const connected=data.instagram?.status==='connected'; ig.textContent=connected?'Instagram conectado':'Instagram pendiente'; ig.className='ai-badge '+(connected?'ok':'warn');
+      const brand=$('#aiBrand')?.value||'adria-sushi'; const state=data.instagram_by_brand?.[brand]; const connected=state?.status==='connected'&&state?.token_ready===true;
+      ig.textContent=connected?((state.instagram_handle?'@'+state.instagram_handle:'Instagram')+' conectado'):'Instagram pendiente'; ig.className='ai-badge '+(connected?'ok':'warn');
     }catch{}
   }
 
@@ -101,7 +102,7 @@
     if(!confirm(`¿Programar esta publicación para ${new Date(dt).toLocaleString('es-CL')}?`)) return;
     $('#aiScheduleBtn').disabled=true; status('Programando...');
     try{await api({action:'schedule',brand_id:$('#aiBrand').value,title:$('#aiTitle').value,caption,media_url:media.media_url,media_path:media.media_path,ai_analysis:analysis||{},scheduled_at:new Date(dt).toISOString()});status('Publicación programada y aprobada.');media=null;analysis=null;$('#aiTitle').value='';$('#aiCaption').value='';$('#aiUploadContent').innerHTML='<strong>Subir otra foto</strong><p class="helper">Toca aquí o arrastra una imagen</p>';$('#aiAnalyzeBtn').disabled=true;defaultSchedule();await refreshQueue();}
-    catch(e){status(e.message||'No se pudo programar');$('#aiScheduleBtn').disabled=false;}
+    catch(e){status((e.message||'No se pudo programar')+(e.detail?' — '+e.detail:''));$('#aiScheduleBtn').disabled=false;}
   }
 
   async function refreshQueue(){
@@ -113,7 +114,7 @@
   $('#aiFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(f)uploadFile(f).catch(err=>status(err.message));});
   $('#aiUploadZone').addEventListener('dragover',e=>{e.preventDefault();}); $('#aiUploadZone').addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files?.[0];if(f)uploadFile(f).catch(err=>status(err.message));});
   $('#aiAnalyzeBtn').addEventListener('click',analyze); $('#aiConfigBtn').addEventListener('click',configureAI); $('#aiScheduleBtn').addEventListener('click',schedule); $('#aiRefreshQueue').addEventListener('click',refreshQueue);
-  $('#aiBrand').addEventListener('change',()=>{analysis=null; if(media) status('Marca cambiada. Vuelve a analizar la foto para adaptar el copy.');});
+  $('#aiBrand').addEventListener('change',()=>{analysis=null; refreshStatus(); if(media) status('Marca cambiada. Vuelve a analizar la foto para adaptar el copy.');});
 
   if(!getPin()) showGate(); else { refreshStatus(); refreshQueue(); }
 })();
