@@ -173,3 +173,5 @@ function bind(){
 
 render();bind();
 setInterval(renderRescue,60000);
+
+;(()=>{if(document.querySelector('#instagramConnectionPanel'))return;const p=document.createElement('section');p.id='instagramConnectionPanel';p.style.cssText='margin:18px 0;padding:18px;border:1px solid #eadfc7;border-radius:16px;background:#fff9ee';p.innerHTML='<strong>Instagram preparado</strong><h2 style="margin:8px 0">Adrià Sushi</h2><p>La cuenta <b>@adria__sushi</b> ya autorizó Laberinto Publicador. El acceso de publicación se guardará solo en el servidor privado.</p><button type="button" class="btn secondary" id="instagramConnectionInfo">Ver estado de conexión</button><p style="font-size:.9rem">No se publicará nada sin una aprobación posterior desde Laberinto.</p>';(document.querySelector('#rescuePanel')||document.querySelector('main'))?.insertAdjacentElement('afterend',p);document.querySelector('#instagramConnectionInfo')?.addEventListener('click',()=>alert('Instagram de Adrià Sushi está autorizado. Falta completar el token privado del servidor antes de habilitar publicaciones.'));})();
