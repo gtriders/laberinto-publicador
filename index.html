@@ -31,82 +31,31 @@
     </section>
 
     <section id="rescuePanel" class="panel rescue hidden">
-      <div class="panel-heading">
-        <div><span class="eyebrow">AUTOMATIZACIÓN EDITORIAL</span><h2>No publicaste hoy: recuperemos algo bueno</h2></div>
-        <button id="refreshSuggestionBtn" class="btn ghost">Otra sugerencia</button>
-      </div>
+      <div class="panel-heading"><div><span class="eyebrow">AUTOMATIZACIÓN EDITORIAL</span><h2>No publicaste hoy: recuperemos algo bueno</h2></div><button id="refreshSuggestionBtn" class="btn ghost">Otra sugerencia</button></div>
       <div id="rescueSuggestion"></div>
     </section>
 
     <section class="workspace">
       <div class="left-column">
-        <section class="panel">
-          <div class="panel-heading">
-            <div><span class="eyebrow">COLA EDITORIAL</span><h2>Próximas publicaciones</h2></div>
-            <div class="filters">
-              <select id="brandFilter" aria-label="Filtrar por marca"></select>
-              <select id="statusFilter" aria-label="Filtrar por estado">
-                <option value="all">Todos los estados</option>
-                <option value="idea">Idea</option>
-                <option value="ready">Lista</option>
-                <option value="scheduled">Programada</option>
-                <option value="published">Publicada</option>
-              </select>
-            </div>
-          </div>
-          <div id="postList" class="post-list"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div><span class="eyebrow">BIBLIOTECA HISTÓRICA</span><h2>Reutiliza lo que ya funcionó</h2></div>
-            <label class="btn secondary file-label">Importar CSV<input id="historyImport" type="file" accept=".csv,text/csv" hidden></label>
-          </div>
-          <p class="helper">Puedes exportar publicaciones antiguas desde tus herramientas de Meta o preparar un CSV con columnas: fecha, marca, texto, url, likes, comentarios.</p>
-          <div id="libraryList" class="library-list"></div>
-        </section>
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">COLA EDITORIAL</span><h2>Próximas publicaciones</h2></div><div class="filters"><select id="brandFilter" aria-label="Filtrar por marca"></select><select id="statusFilter" aria-label="Filtrar por estado"><option value="all">Todos los estados</option><option value="idea">Idea</option><option value="ready">Lista</option><option value="scheduled">Programada</option><option value="published">Publicada</option></select></div></div><div id="postList" class="post-list"></div></section>
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">BIBLIOTECA HISTÓRICA</span><h2>Reutiliza lo que ya funcionó</h2></div><label class="btn secondary file-label">Importar CSV<input id="historyImport" type="file" accept=".csv,text/csv" hidden></label></div><p class="helper">Puedes exportar publicaciones antiguas desde tus herramientas de Meta o preparar un CSV con columnas: fecha, marca, texto, url, likes, comentarios.</p><div id="libraryList" class="library-list"></div></section>
       </div>
 
       <aside class="right-column">
-        <section class="panel brand-panel">
-          <div class="panel-heading"><div><span class="eyebrow">VOZ DE MARCA</span><h2>Cómo debe hablar cada cuenta</h2></div></div>
-          <div id="brandCards"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading"><div><span class="eyebrow">RITMO SEMANAL</span><h2>Objetivo simple</h2></div></div>
-          <div class="cadence">
-            <div><strong>Adrià Sushi</strong><span>4 publicaciones / semana</span></div>
-            <div><strong>Sanguchería Adrià</strong><span>3 publicaciones / semana</span></div>
-            <div><strong>Adrià PET</strong><span>3 publicaciones / semana</span></div>
-            <div><strong>Chef Rafael</strong><span>2–3 publicaciones / semana</span></div>
-            <div><strong>Laberinto Digital</strong><span>2 publicaciones / semana</span></div>
-          </div>
-        </section>
+        <section class="panel brand-panel"><div class="panel-heading"><div><span class="eyebrow">VOZ DE MARCA</span><h2>Cómo debe hablar cada cuenta</h2></div></div><div id="brandCards"></div></section>
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">RITMO SEMANAL</span><h2>Objetivo simple</h2></div></div><div class="cadence"><div><strong>Adrià Sushi</strong><span>4 publicaciones / semana</span></div><div><strong>Sanguchería Adrià</strong><span>3 publicaciones / semana</span></div><div><strong>Adrià PET</strong><span>3 publicaciones / semana</span></div><div><strong>Chef Rafael</strong><span>2–3 publicaciones / semana</span></div><div><strong>Laberinto Digital</strong><span>2 publicaciones / semana</span></div></div></section>
       </aside>
     </section>
   </main>
 
   <dialog id="postDialog">
-    <form id="postForm" method="dialog">
-      <div class="dialog-head"><div><span class="eyebrow">EDITOR</span><h2 id="dialogTitle">Nueva publicación</h2></div><button type="button" id="closeDialog" class="icon-btn">×</button></div>
-      <div class="form-grid">
-        <label>Marca<select id="postBrand" required></select></label>
-        <label>Estado<select id="postStatus"><option value="idea">Idea</option><option value="ready">Lista</option><option value="scheduled">Programada</option><option value="published">Publicada</option></select></label>
-        <label>Fecha<input id="postDate" type="date" required /></label>
-        <label>Hora<input id="postTime" type="time" value="13:00" required /></label>
-      </div>
-      <label>Idea / título<input id="postTitle" type="text" maxlength="120" required placeholder="Ej: Miércoles de Tempura" /></label>
-      <label>Texto<textarea id="postCopy" rows="6" placeholder="Escribe el texto o deja una idea para desarrollar"></textarea></label>
-      <label>URL de imagen o video<input id="postMedia" type="url" placeholder="https://..." /></label>
-      <div class="dialog-actions"><button type="button" id="deletePostBtn" class="btn danger hidden">Eliminar</button><span></span><button type="button" id="cancelBtn" class="btn secondary">Cancelar</button><button type="submit" class="btn primary">Guardar</button></div>
-    </form>
+    <form id="postForm" method="dialog"><div class="dialog-head"><div><span class="eyebrow">EDITOR</span><h2 id="dialogTitle">Nueva publicación</h2></div><button type="button" id="closeDialog" class="icon-btn">×</button></div><div class="form-grid"><label>Marca<select id="postBrand" required></select></label><label>Estado<select id="postStatus"><option value="idea">Idea</option><option value="ready">Lista</option><option value="scheduled">Programada</option><option value="published">Publicada</option></select></label><label>Fecha<input id="postDate" type="date" required /></label><label>Hora<input id="postTime" type="time" value="13:00" required /></label></div><label>Idea / título<input id="postTitle" type="text" maxlength="120" required placeholder="Ej: Miércoles de Tempura" /></label><label>Texto<textarea id="postCopy" rows="6" placeholder="Escribe el texto o deja una idea para desarrollar"></textarea></label><label>URL de imagen o video<input id="postMedia" type="url" placeholder="https://..." /></label><div class="dialog-actions"><button type="button" id="deletePostBtn" class="btn danger hidden">Eliminar</button><span></span><button type="button" id="cancelBtn" class="btn secondary">Cancelar</button><button type="submit" class="btn primary">Guardar</button></div></form>
   </dialog>
 
   <script src="app.js?v=20260825"></script>
   <script src="supabase-sync.js?v=20260825"></script>
   <script src="publish-flow.js?v=20260825c"></script>
-  <script src="instagram-setup.js?v=20260825b"></script>
+  <script src="instagram-setup.js?v=20260825c"></script>
   <script src="drive-library.js?v=20260825"></script>
 </body>
 </html>
