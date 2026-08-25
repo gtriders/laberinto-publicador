@@ -11,8 +11,18 @@
 
   const googleButton = document.querySelector('#googleConnectButton');
   const googleMessage = document.querySelector('#googleConnectionMessage');
-  const googleResult = new URLSearchParams(window.location.search).get('google');
+  const googleParams = new URLSearchParams(window.location.search);
+  const googleCode = googleParams.get('code');
+  const googleState = googleParams.get('state');
+  const googleResult = googleParams.get('google');
   if (googleResult === 'connected') googleMessage.textContent = 'Google conectado correctamente.';
+  if (googleCode && googleState) {
+    googleMessage.textContent = 'Finalizando conexión con Google...';
+    fetch(GOOGLE_OAUTH_FUNCTION + '?mode=callback&code=' + encodeURIComponent(googleCode) + '&state=' + encodeURIComponent(googleState))
+      .then((response) => { if (!response.ok) throw new Error('Google callback failed'); return response.json(); })
+      .then(() => { googleMessage.textContent = 'Google conectado correctamente.'; window.history.replaceState({}, document.title, window.location.pathname); })
+      .catch(() => { googleMessage.textContent = 'No se pudo completar la conexión con Google.'; });
+  }
   if (googleResult && googleResult !== 'connected') googleMessage.textContent = 'No se pudo completar la conexión con Google.';
   if (googleResult) window.history.replaceState({}, document.title, window.location.pathname);
   googleButton?.addEventListener('click', async () => {
