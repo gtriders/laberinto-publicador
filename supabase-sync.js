@@ -1,4 +1,5 @@
 (() => {
+  document.querySelectorAll('.integration-panel').forEach((node) => node.remove());
   const SUPABASE_URL = 'https://ufsxdlmnjuaymdszyjue.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_eHnq_wktiWAmzlm0yzRnow_KKLrR2pN';
   const GOOGLE_OAUTH_FUNCTION = SUPABASE_URL + '/functions/v1/google-business-oauth';
