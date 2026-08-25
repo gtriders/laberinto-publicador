@@ -3,7 +3,14 @@
   const PIN_KEY = 'laberinto_session_pin';
   const getPin = () => sessionStorage.getItem(PIN_KEY) || '';
   const getBrand = () => document.querySelector('#aiBrand')?.value || 'adria-sushi';
-  const brandLabel = (id) => id === 'adria-sangucheria' ? 'Sanguchería Adrià' : 'Adrià Sushi';
+  const labels = {
+    'adria-sushi':'Adrià Sushi',
+    'adria-sangucheria':'Sanguchería Adrià',
+    'pet':'Adrià PET',
+    'chef-rafael':'Chef Rafael'
+  };
+  const brandLabel = (id) => labels[id] || id;
+  const enabled = Object.keys(labels);
 
   const api = async (body) => {
     const res = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...body,pin:getPin()}) });
@@ -17,11 +24,11 @@
     const actions=document.querySelector('.ai-actions'), aiConfig=document.querySelector('#aiConfigBtn');
     if(!actions||!aiConfig||document.querySelector('#igConfigBtn')) return false;
     const metaBtn=document.createElement('button'); metaBtn.id='igMetaBtn'; metaBtn.className='btn secondary'; metaBtn.type='button'; metaBtn.textContent='Abrir Meta';
-    metaBtn.addEventListener('click',()=>{ window.open('https://developers.facebook.com/apps/2518966771958311/','_blank','noopener,noreferrer'); setMessage('En Meta genera el access token de la cuenta de Instagram correspondiente a '+brandLabel(getBrand())+'.'); });
+    metaBtn.addEventListener('click',()=>{ window.open('https://developers.facebook.com/apps/2518966771958311/','_blank','noopener,noreferrer'); setMessage('En Meta genera el access token de la cuenta correspondiente a '+brandLabel(getBrand())+'.'); });
     const tokenBtn=document.createElement('button'); tokenBtn.id='igConfigBtn'; tokenBtn.className='btn secondary'; tokenBtn.type='button'; tokenBtn.textContent='Conectar Instagram';
     tokenBtn.addEventListener('click',async()=>{
       const brand=getBrand();
-      if(!['adria-sushi','adria-sangucheria'].includes(brand)){ setMessage('La publicación automática todavía no está habilitada para esta marca.'); return; }
+      if(!enabled.includes(brand)){ setMessage('La publicación automática todavía no está habilitada para esta marca.'); return; }
       const token=prompt('Pega el access token de Instagram para '+brandLabel(brand)+'. Se validará y guardará solo en Supabase Vault.'); if(!token)return;
       tokenBtn.disabled=true; setMessage('Validando Instagram para '+brandLabel(brand)+'...');
       try{ const data=await api({action:'set_instagram_token',brand_id:brand,access_token:token.trim()}); tokenBtn.textContent='Instagram conectado'; const badge=document.querySelector('#igReadyBadge'); if(badge){badge.textContent=(data.username?'@'+data.username:'Instagram')+' conectado';badge.className='ai-badge ok';} setMessage(brandLabel(brand)+' quedó conectado.'); await retryLastFailed(brand); }
@@ -33,8 +40,8 @@
 
   async function refreshInstagramState(){
     try{ const brand=getBrand(),data=await api({action:'status'}),state=data.instagram_by_brand?.[brand],ready=state?.status==='connected'&&state?.token_ready===true; const btn=document.querySelector('#igConfigBtn'),badge=document.querySelector('#igReadyBadge');
-      if(btn){ btn.textContent=ready?'Instagram conectado':'Conectar Instagram'; btn.disabled=!!ready; }
-      if(badge){ badge.textContent=ready?((state.instagram_handle?'@'+state.instagram_handle:'Instagram')+' conectado'):(brand==='adria-sangucheria'?'Instagram Sanguchería pendiente':'Instagram pendiente'); badge.className='ai-badge '+(ready?'ok':'warn'); }
+      if(btn){ btn.textContent=ready?'Instagram conectado':'Conectar Instagram'; btn.disabled=!!ready||!enabled.includes(brand); }
+      if(badge){ badge.textContent=ready?((state.instagram_handle?'@'+state.instagram_handle:'Instagram')+' conectado'):(enabled.includes(brand)?'Instagram '+brandLabel(brand)+' pendiente':'Instagram no habilitado'); badge.className='ai-badge '+(ready?'ok':'warn'); }
     }catch{}
   }
 
