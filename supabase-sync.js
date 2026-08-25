@@ -6,10 +6,26 @@
 
   const panel = document.createElement('section');
   panel.className = 'panel integration-panel';
-  panel.innerHTML = '<div class="panel-heading"><div><span class="eyebrow">DATOS CENTRALES</span><h2>Conexiones</h2></div><span id="supabaseBadge" class="badge ready">Conectando...</span></div><p id="supabaseMessage" class="helper">Estamos comprobando la biblioteca compartida.</p><div id="supabaseBrands" class="connection-list"></div><div class="connection-actions"><button id="googleConnectButton" class="button secondary" type="button">Conectar Google</button><span id="googleConnectionMessage" class="helper">Google Business Profile listo para autorizar.</span></div>';
+  panel.innerHTML = '<div class="panel-heading"><div><span class="eyebrow">DATOS CENTRALES</span><h2>Conexiones</h2></div><span id="supabaseBadge" class="badge ready">Conectando...</span></div><p id="supabaseMessage" class="helper">Estamos comprobando la biblioteca compartida.</p><div id="supabaseBrands" class="connection-list"></div><div class="connection-actions"><button id="googleConnectButton" class="button secondary" type="button">Conectar Google</button><button id="googleLocationsButton" class="button secondary" type="button">Ver perfiles Google</button><span id="googleLocationsMessage" class="helper"></span><span id="googleConnectionMessage" class="helper">Google Business Profile listo para autorizar.</span></div>';
   document.querySelector('main')?.prepend(panel);
 
   const googleButton = document.querySelector('#googleConnectButton');
+  const locationsButton = document.querySelector('#googleLocationsButton');
+  const locationsMessage = document.querySelector('#googleLocationsMessage');
+  locationsButton?.addEventListener('click', async () => {
+    locationsButton.disabled = true;
+    locationsMessage.textContent = 'Buscando perfiles...';
+    try {
+      const response = await fetch(GOOGLE_OAUTH_FUNCTION.replace('google-business-oauth', 'google-business-api'));
+      if (!response.ok) throw new Error('No se pudieron leer los perfiles');
+      const data = await response.json();
+      locationsMessage.textContent = data.locations?.length ? data.locations.map((location) => location.title).join(' · ') : 'No hay ubicaciones disponibles.';
+    } catch (error) {
+      locationsMessage.textContent = 'No se pudieron leer los perfiles todavía.';
+    } finally {
+      locationsButton.disabled = false;
+    }
+  });
   const googleMessage = document.querySelector('#googleConnectionMessage');
   const googleParams = new URLSearchParams(window.location.search);
   const googleCode = googleParams.get('code');
