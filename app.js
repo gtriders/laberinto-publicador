@@ -45,18 +45,16 @@ function loadState(){
   return {posts:DEFAULT_POSTS, library:DEFAULT_LIBRARY};
 }
 function saveState(){ localStorage.setItem('laberinto-publicador-v1',JSON.stringify(state)); render(); }
-function esc(s=''){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function esc(s=''){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[m])); }
 function statusLabel(s){ return ({idea:'Idea',ready:'Lista',scheduled:'Programada',published:'Publicada'})[s] || s; }
 function formatDate(date){ try{return new Intl.DateTimeFormat('es-CL',{day:'2-digit',month:'short'}).format(new Date(date+'T12:00:00'));}catch{return date;} }
 
-function render(){
-  renderFilters(); renderStats(); renderPosts(); renderLibrary(); renderBrands(); renderRescue();
-}
+function render(){ renderFilters(); renderStats(); renderPosts(); renderLibrary(); renderBrands(); renderRescue(); }
 function renderFilters(){
   const options = `<option value="all">Todas las marcas</option>` + Object.entries(BRANDS).map(([k,b])=>`<option value="${k}">${b.name}</option>`).join('');
   const bf=document.querySelector('#brandFilter'); const pb=document.querySelector('#postBrand');
-  if(!bf.dataset.ready){ bf.innerHTML=options; bf.dataset.ready='1'; }
-  if(!pb.dataset.ready){ pb.innerHTML=Object.entries(BRANDS).map(([k,b])=>`<option value="${k}">${b.name}</option>`).join(''); pb.dataset.ready='1'; }
+  if(bf&&!bf.dataset.ready){ bf.innerHTML=options; bf.dataset.ready='1'; }
+  if(pb&&!pb.dataset.ready){ pb.innerHTML=Object.entries(BRANDS).map(([k,b])=>`<option value="${k}">${b.name}</option>`).join(''); pb.dataset.ready='1'; }
 }
 function renderStats(){
   const today=todayISO();
@@ -79,7 +77,8 @@ function renderLibrary(){
   el.querySelectorAll('.reuse-btn').forEach(btn=>btn.addEventListener('click',()=>reuseItem(btn.dataset.id)));
 }
 function renderBrands(){
-  document.querySelector('#brandCards').innerHTML=Object.entries(BRANDS).map(([k,b])=>`<article class="brand-card"><h3>${b.name}</h3><p>${b.tone}</p><p style="margin-top:7px"><strong>CTA:</strong> ${b.CTA}</p></article>`).join('');
+  const root=document.querySelector('#brandCards'); if(!root)return;
+  root.innerHTML=Object.entries(BRANDS).map(([k,b])=>`<article class="brand-card"><h3>${b.name}</h3><p>${b.tone}</p><p style="margin-top:7px"><strong>CTA:</strong> ${b.CTA}</p></article>`).join('');
 }
 function shouldRescue(){
   const now=new Date(); const today=todayISO();
@@ -88,17 +87,14 @@ function shouldRescue(){
   return after1300 && !alreadyPublished && state.library.length>0;
 }
 function getSuggestion(){
-  const candidates=state.library.filter(i=>{
-    const age=(Date.now()-new Date(i.date+'T12:00:00').getTime())/86400000;
-    return age>60;
-  });
+  const candidates=state.library.filter(i=>{ const age=(Date.now()-new Date(i.date+'T12:00:00').getTime())/86400000; return age>60; });
   if(!candidates.length) return state.library[0] || null;
   const ranked=[...candidates].sort((a,b)=>((b.likes||0)+(b.comments||0)*3)-((a.likes||0)+(a.comments||0)*3));
   const top=ranked.slice(0,Math.min(10,ranked.length));
   return top[Math.floor(Math.random()*top.length)];
 }
 function renderRescue(){
-  const panel=document.querySelector('#rescuePanel');
+  const panel=document.querySelector('#rescuePanel'); if(!panel)return;
   if(!shouldRescue()){
     panel.classList.add('hidden');
     document.querySelector('#rescueStatus').textContent='En orden';
@@ -119,8 +115,7 @@ function reuseItem(id){
   state.posts.push(post); saveState(); openEditor(post.id);
 }
 function openEditor(id){
-  const dialog=document.querySelector('#postDialog');
-  const p=state.posts.find(x=>x.id===id);
+  const dialog=document.querySelector('#postDialog'); const p=state.posts.find(x=>x.id===id);
   document.querySelector('#dialogTitle').textContent=p?'Editar publicación':'Nueva publicación';
   document.querySelector('#postId').value=p?.id||'';
   document.querySelector('#postBrand').value=p?.brand||'sushi';
@@ -134,7 +129,6 @@ function openEditor(id){
   dialog.showModal();
 }
 function closeEditor(){ document.querySelector('#postDialog').close(); }
-
 function parseCSV(text){
   const lines=text.replace(/\r/g,'').split('\n').filter(Boolean); if(lines.length<2)return [];
   const parseLine=line=>{const out=[];let cur='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(cur);cur='';}else cur+=c;}out.push(cur);return out;};
@@ -142,7 +136,6 @@ function parseCSV(text){
   return lines.slice(1).map(line=>{const cols=parseLine(line);const o={};headers.forEach((h,i)=>o[h]=cols[i]??'');return o;});
 }
 function normalizeBrand(v=''){ const x=v.toLowerCase(); if(x.includes('sang'))return 'sangucheria'; if(x.includes('pet'))return 'pet'; if(x.includes('laber'))return 'laberinto'; return 'sushi'; }
-
 function bind(){
   document.querySelector('#newPostBtn').addEventListener('click',()=>openEditor());
   document.querySelector('#closeDialog').addEventListener('click',closeEditor);
@@ -150,28 +143,10 @@ function bind(){
   document.querySelector('#brandFilter').addEventListener('change',renderPosts);
   document.querySelector('#statusFilter').addEventListener('change',renderPosts);
   document.querySelector('#refreshSuggestionBtn').addEventListener('click',()=>{currentSuggestion=getSuggestion();renderRescue();});
-  document.querySelector('#postForm').addEventListener('submit',e=>{
-    e.preventDefault();
-    const id=document.querySelector('#postId').value;
-    const data={id:id||crypto.randomUUID(),brand:document.querySelector('#postBrand').value,status:document.querySelector('#postStatus').value,date:document.querySelector('#postDate').value,time:document.querySelector('#postTime').value,title:document.querySelector('#postTitle').value.trim(),copy:document.querySelector('#postCopy').value.trim(),media:document.querySelector('#postMedia').value.trim()};
-    const idx=state.posts.findIndex(p=>p.id===id); if(idx>=0)state.posts[idx]=data; else state.posts.push(data); saveState();closeEditor();
-  });
+  document.querySelector('#postForm').addEventListener('submit',e=>{e.preventDefault();const id=document.querySelector('#postId').value;const data={id:id||crypto.randomUUID(),brand:document.querySelector('#postBrand').value,status:document.querySelector('#postStatus').value,date:document.querySelector('#postDate').value,time:document.querySelector('#postTime').value,title:document.querySelector('#postTitle').value.trim(),copy:document.querySelector('#postCopy').value.trim(),media:document.querySelector('#postMedia').value.trim()};const idx=state.posts.findIndex(p=>p.id===id);if(idx>=0)state.posts[idx]=data;else state.posts.push(data);saveState();closeEditor();});
   document.querySelector('#deletePostBtn').addEventListener('click',()=>{const id=document.querySelector('#postId').value;if(!id)return;state.posts=state.posts.filter(p=>p.id!==id);saveState();closeEditor();});
-  document.querySelector('#historyImport').addEventListener('change',async e=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const rows=parseCSV(await file.text());
-    const imported=rows.map(r=>({id:crypto.randomUUID(),date:r.fecha||r.date||todayISO(),brand:normalizeBrand(r.marca||r.brand||''),text:r.texto||r.caption||r.text||'',url:r.url||r.link||'',likes:Number(r.likes||r.me_gusta||0)||0,comments:Number(r.comentarios||r.comments||0)||0}));
-    state.library=[...imported,...state.library];saveState();e.target.value='';
-  });
-  document.querySelector('#exportBtn').addEventListener('click',()=>{
-    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`laberinto-publicador-${todayISO()}.json`;a.click();URL.revokeObjectURL(a.href);
-  });
-  document.querySelector('#importBackup').addEventListener('change',async e=>{
-    const file=e.target.files?.[0];if(!file)return;try{const x=JSON.parse(await file.text());if(Array.isArray(x.posts)&&Array.isArray(x.library)){state=x;saveState();}}catch{alert('El respaldo no es válido.');}e.target.value='';
-  });
+  document.querySelector('#historyImport').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;const rows=parseCSV(await file.text());const imported=rows.map(r=>({id:crypto.randomUUID(),date:r.fecha||r.date||todayISO(),brand:normalizeBrand(r.marca||r.brand||''),text:r.texto||r.caption||r.text||'',url:r.url||r.link||'',likes:Number(r.likes||r.me_gusta||0)||0,comments:Number(r.comentarios||r.comments||0)||0}));state.library=[...imported,...state.library];saveState();e.target.value='';});
+  document.querySelector('#exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`laberinto-publicador-${todayISO()}.json`;a.click();URL.revokeObjectURL(a.href);});
+  document.querySelector('#importBackup').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{const x=JSON.parse(await file.text());if(Array.isArray(x.posts)&&Array.isArray(x.library)){state=x;saveState();}}catch{alert('El respaldo no es válido.');}e.target.value='';});
 }
-
-render();bind();
-setInterval(renderRescue,60000);
-
-;(()=>{if(document.querySelector('#instagramConnectionPanel'))return;const p=document.createElement('section');p.id='instagramConnectionPanel';p.style.cssText='margin:18px 0;padding:18px;border:1px solid #eadfc7;border-radius:16px;background:#fff9ee';p.innerHTML='<strong>Instagram preparado</strong><h2 style="margin:8px 0">Adrià Sushi</h2><p>La cuenta <b>@adria__sushi</b> ya autorizó Laberinto Publicador. El acceso de publicación se guardará solo en el servidor privado.</p><button type="button" class="btn secondary" id="instagramConnectionInfo">Ver estado de conexión</button><p style="font-size:.9rem">No se publicará nada sin una aprobación posterior desde Laberinto.</p>';(document.querySelector('#rescuePanel')||document.querySelector('main'))?.insertAdjacentElement('afterend',p);document.querySelector('#instagramConnectionInfo')?.addEventListener('click',()=>alert('Instagram de Adrià Sushi está autorizado. Falta completar el token privado del servidor antes de habilitar publicaciones.'));})();
+render();bind();setInterval(renderRescue,60000);
