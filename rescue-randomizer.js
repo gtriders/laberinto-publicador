@@ -36,6 +36,7 @@
     }
   };
 
+  const cleanMeta=()=>document.querySelectorAll('.ig-rescue-meta').forEach(el=>{el.textContent=el.textContent.replace(/\s*·\s*puntaje\s+[\d.,]+/i,'');});
   const tuneUi=()=>{
     const badge=document.querySelector('#igRescueBadge');
     const panel=document.querySelector('.ig-rescue');
@@ -43,7 +44,9 @@
     badge.textContent='Aleatorio mixto';
     const helper=panel.querySelector('.helper');
     if(helper)helper.textContent='Cada tanda mezcla publicaciones más recientes con otras antiguas al azar. No prioriza siempre las que tuvieron más likes y no repite las que ya viste en esta sesión.';
+    cleanMeta();
     return true;
   };
+  const observer=new MutationObserver(()=>cleanMeta());observer.observe(document.documentElement,{subtree:true,childList:true});
   let tries=0;const timer=setInterval(()=>{tries++;if(tuneUi()||tries>80)clearInterval(timer);},150);tuneUi();
 })();
