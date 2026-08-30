@@ -1,5 +1,5 @@
 (() => {
-  const API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/posting-time-api';
+  const API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/posting-time-recommendations';
   const PIN_KEY='laberinto_session_pin';
   const cache=new Map();
   const fallback={0:[12,19],1:[12,19],2:[13,19],3:[12,18],4:[13,19],5:[13,20],6:[13,20]};
@@ -9,6 +9,7 @@
     .planner-time-row{display:grid;grid-template-columns:minmax(140px,.8fr) minmax(130px,.6fr) 1fr;gap:10px;align-items:end}
     .planner-time-row label{display:grid;gap:5px;font-size:.78rem;font-weight:750;color:#5f574d}
     .planner-time-row input,.planner-time-row select{width:100%;min-width:0}
+    #plannerHour.is-recommended{background:#f4efe6;border-color:#9b7a44;font-weight:800;color:#5b4425}
     .planner-best-times{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:42px}
     .planner-best-label{font-size:.72rem;font-weight:800;letter-spacing:.03em;color:#7d7469;margin-right:2px}
     .planner-time-chip{border:1px solid #d9cfc0;background:#f7f2ea;color:#4f463d;border-radius:999px;padding:6px 9px;font-size:.78rem;font-weight:800;cursor:pointer}
@@ -39,21 +40,29 @@
     toolbar.parentElement?.appendChild(box);
     const date=document.querySelector('#plannerDate'),hour=document.querySelector('#plannerHour');
     date.value=localDateValue();
-    for(let h=8;h<=22;h++){const o=document.createElement('option');o.value=fmt(h);o.textContent=fmt(h);hour.appendChild(o);}
+    const baseHours=[];for(let h=8;h<=22;h++)baseHours.push(h);
+    function fillHours(recommended=[]){
+      const selected=hour.value;
+      hour.innerHTML=baseHours.map(h=>`<option value="${fmt(h)}">${recommended.includes(h)?'★ ':''}${fmt(h)}</option>`).join('');
+      if(selected&&[...hour.options].some(o=>o.value===selected))hour.value=selected;
+      updateHourStyle(recommended);
+    }
+    function updateHourStyle(recommended=[]){hour.classList.toggle('is-recommended',recommended.includes(Number((hour.value||'').slice(0,2))));}
     async function refresh(){
       const brandId=brand.value,weekday=getWeekday(date.value),rows=await fetchRecommendations(brandId);
       let recs=rows.filter(x=>Number(x.weekday)===weekday).sort((a,b)=>Number(a.rank)-Number(b.rank));
       if(!recs.length)recs=(fallback[weekday]||[13,19]).map((h,i)=>({hour_local:h,rank:i+1,source:'fallback',sample_size:0}));
-      const top=recs.slice(0,3),root=document.querySelector('#plannerBestTimes');
+      const top=recs.slice(0,3),recommended=top.map(x=>Number(x.hour_local));
+      fillHours(recommended);
+      const root=document.querySelector('#plannerBestTimes');
       root.innerHTML=`<span class="planner-best-label">Mejores horas</span>${top.map((x,i)=>`<button type="button" class="planner-time-chip ${i===0?'best':''}" data-hour="${fmt(Number(x.hour_local))}">${i===0?'★ ':''}${fmt(Number(x.hour_local))}</button>`).join('')}`;
-      root.querySelectorAll('[data-hour]').forEach(b=>b.addEventListener('click',()=>{hour.value=b.dataset.hour;}));
-      const current=hour.value,valid=[...hour.options].some(o=>o.value===fmt(Number(top[0]?.hour_local)));
-      if(!current||!valid)hour.value=fmt(Number(top[0]?.hour_local||13));
-      else hour.value=fmt(Number(top[0]?.hour_local||13));
-      const real=top.some(x=>x.source==='instagram_history'&&Number(x.sample_size)>0);
+      root.querySelectorAll('[data-hour]').forEach(b=>b.addEventListener('click',()=>{hour.value=b.dataset.hour;updateHourStyle(recommended);}));
+      hour.value=fmt(Number(top[0]?.hour_local||13));updateHourStyle(recommended);
+      const real=top.some(x=>String(x.source||'').startsWith('instagram_history')&&Number(x.sample_size)>0);
       const updated=rows[0]?.updated_at?new Date(rows[0].updated_at).toLocaleDateString('es-CL'):'';
-      document.querySelector('#plannerTimeMeta').textContent=real?`Basado en historial de esta cuenta${updated?` · actualizado ${updated}`:''}`:`Referencia inicial${updated?` · actualizado ${updated}`:''}`;
+      document.querySelector('#plannerTimeMeta').textContent=real?`Basado en los últimos 6 meses de esta cuenta${updated?` · actualizado ${updated}`:''} · recalcula cada 2 meses`:`Referencia inicial${updated?` · actualizado ${updated}`:''} · recalcula cada 2 meses`;
     }
+    hour.addEventListener('change',()=>{const wd=getWeekday(date.value),rows=cache.get(brand.value)||[],recs=rows.filter(x=>Number(x.weekday)===wd).sort((a,b)=>Number(a.rank)-Number(b.rank)).slice(0,3),recommended=recs.length?recs.map(x=>Number(x.hour_local)):(fallback[wd]||[13,19]);updateHourStyle(recommended);});
     brand.addEventListener('change',refresh);date.addEventListener('change',refresh);refresh();
     return true;
   }
