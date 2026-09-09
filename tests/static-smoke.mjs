@@ -21,6 +21,7 @@ for(const file of jsFiles){
 const planner=readFileSync(join(root,'planner.js'),'utf8');
 const publisher=readFileSync(join(root,'publish-flow-v3.js'),'utf8');
 const studio=readFileSync(join(root,'ai-studio.js'),'utf8');
+const stories=readFileSync(join(root,'rescue-stories.js'),'utf8');
 check(planner.includes('Calendario comercial'),'El Planificador no está identificado como calendario comercial.');
 check(planner.includes('laberinto:calendar-draft'),'El calendario no prepara borradores en el Publicador.');
 check(!planner.includes('posting-time-api'),'El calendario todavía depende de recomendaciones horarias.');
@@ -28,6 +29,7 @@ check(!html.includes('instagram-setup.js'),'index.html todavía carga la integra
 check(!html.includes('newPostBtn')&&!html.includes('postDialog'),'Sigue cargado el publicador manual antiguo.');
 check(publisher.includes('laberinto:studio-draft'),'El Publicador no recibe el borrador de Studio IA.');
 check(studio.includes('caption,context,studio_analysis'),'Studio IA no entrega texto y contexto al Publicador.');
+check(stories.includes('¿Enviar esta historia'),'Las historias no solicitan confirmación antes de enviarse.');
 
 if(failures.length){console.error(failures.map(item=>`- ${item}`).join('\n'));process.exit(1);}
 console.log(`OK: ${jsFiles.length} scripts válidos y flujo comercial/Studio conectado.`);
