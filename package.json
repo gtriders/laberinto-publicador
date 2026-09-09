@@ -1,0 +1,7 @@
+{
+  "name": "laberinto-publicador",
+  "private": true,
+  "scripts": {
+    "test": "node tests/static-smoke.mjs"
+  }
+}

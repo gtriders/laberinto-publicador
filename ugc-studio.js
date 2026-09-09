@@ -42,6 +42,7 @@
   const dbp=new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   async function dbPut(rec){const db=await dbp;return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(rec);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
   async function dbGet(id){const db=await dbp;return new Promise((res,rej)=>{const r=db.transaction(STORE,'readonly').objectStore(STORE).get(id);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);});}
+  async function dbAll(){const db=await dbp;return new Promise((res,rej)=>{const r=db.transaction(STORE,'readonly').objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});}
   async function dbDelete(id){const db=await dbp;return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
   function makeId(prefix='ref'){return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;}
   async function addFiles(files,target,productId=''){
@@ -50,7 +51,10 @@
   }
   async function removeRef(id,target,productId=''){await dbDelete(id);if(productId){const p=meta.products[productId];if(p)p.refs=(p.refs||[]).filter(x=>x!==id);}else meta.places[target]=(meta.places[target]||[]).filter(x=>x!==id);saveMeta();}
   async function blobUrl(id){const rec=await dbGet(id);return rec?.blob?URL.createObjectURL(rec.blob):'';}
-  const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[m]));
+  const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  const blobToDataUrl=blob=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
+  async function exportBackup(){const records=await dbAll(),refs=[];for(const rec of records)refs.push({...rec,blob:await blobToDataUrl(rec.blob)});const payload={version:1,exported_at:new Date().toISOString(),meta,refs},url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`laberinto-ugc-respaldo-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}
+  async function importBackup(file){const payload=JSON.parse(await file.text());if(payload?.version!==1||!payload.meta||!Array.isArray(payload.refs))throw new Error('El archivo no es un respaldo UGC válido.');for(const rec of payload.refs){if(typeof rec.blob!=='string'||!rec.blob.startsWith('data:'))continue;const blob=await fetch(rec.blob).then(r=>r.blob());await dbPut({...rec,blob});}meta=payload.meta;saveMeta();}
 
   async function renderRefs(root,ids,target,productId=''){
     root.innerHTML='';
@@ -63,13 +67,17 @@
     const card=document.createElement('article');card.id='ugcSettingsCard';card.className='settings-card settings-full';card.innerHTML=`
       <span class="eyebrow">UGC IA · V1</span><h3>Referencias reales de Sanguchería Adrià</h3>
       <p class="helper">Se configura una vez. El generador usa estas referencias para no pedir prompts y para reducir invenciones.</p>
+      <div class="ugc-rule"><strong>Respaldo:</strong> estas fotos viven en este navegador. Exporta una copia después de agregar referencias importantes.</div>
+      <div class="settings-row"><button id="ugcExport" class="btn secondary" type="button">Exportar respaldo UGC</button><label class="btn secondary file-label">Importar respaldo<input id="ugcImport" type="file" accept="application/json,.json" hidden></label><span id="ugcBackupStatus" class="settings-status"></span></div>
       <div class="ugc-rule"><strong>Regla fija:</strong> si existe evidencia real, usarla. Si falta evidencia, simplificar antes que inventar. El producto, sus ingredientes visibles, el tamaño y el local deben mantenerse fieles a las referencias.</div>
       <div class="settings-row"><input id="ugcSite" type="url" value="${esc(meta.site||DEFAULT_SITE)}"><button id="ugcOpenSite" class="btn secondary" type="button">Abrir web</button><span class="settings-status">Catálogo oficial de referencia</span></div>
       <div class="ugc-ref-grid">${placeTypes.map(x=>`<div class="ugc-ref-box"><strong>${x.name}</strong><div class="ugc-thumbs" id="ugcPlace_${x.id}"></div><label class="btn secondary file-label" style="margin-top:8px">+ Fotos<input data-place="${x.id}" class="ugcPlaceInput" type="file" accept="image/*" multiple hidden></label></div>`).join('')}</div>
       <div class="settings-tools"><span class="eyebrow">PRODUCTOS</span><div class="settings-row"><select id="ugcProductSelect"></select><button id="ugcNewProduct" class="btn secondary" type="button">+ Producto</button></div><div id="ugcProductEditor"></div><div id="ugcProductList" class="ugc-product-list"></div></div>`;
-    const admin=document.querySelector('#settingsAdminActions')?.closest('.settings-card');grid.insertBefore(card,admin||null);
+    grid.insertBefore(card,document.querySelector('#settingsHistory')||null);
     document.querySelector('#ugcSite').addEventListener('change',e=>{meta.site=e.target.value.trim()||DEFAULT_SITE;saveMeta();});
     document.querySelector('#ugcOpenSite').onclick=()=>window.open(meta.site||DEFAULT_SITE,'_blank','noopener,noreferrer');
+    document.querySelector('#ugcExport').onclick=async()=>{const s=document.querySelector('#ugcBackupStatus');s.textContent='Preparando respaldo…';try{await exportBackup();s.textContent='Respaldo descargado.';s.className='settings-status ok';}catch(e){s.textContent=e.message;s.className='settings-status error';}};
+    document.querySelector('#ugcImport').onchange=async e=>{const file=e.target.files?.[0],s=document.querySelector('#ugcBackupStatus');if(!file)return;if(!confirm('¿Importar este respaldo y combinar sus referencias con este navegador?')){e.target.value='';return;}s.textContent='Importando respaldo…';try{await importBackup(file);renderPlaceRefs();renderProductSelect();renderProductEditor();renderProductList();s.textContent='Respaldo importado.';s.className='settings-status ok';}catch(err){s.textContent=err.message;s.className='settings-status error';}finally{e.target.value='';}};
     card.querySelectorAll('.ugcPlaceInput').forEach(input=>input.onchange=async()=>{await addFiles([...input.files],input.dataset.place);input.value='';renderPlaceRefs();});
     document.querySelector('#ugcNewProduct').onclick=()=>{const name=prompt('Nombre exacto del producto');if(!name)return;const id=slug(name);if(!meta.products[id])meta.products[id]={id,name,ingredients:'',size:'',presentation:'',refs:[]};saveMeta();renderProductSelect(id);renderProductEditor();renderProductList();};
     document.querySelector('#ugcProductSelect').onchange=renderProductEditor;

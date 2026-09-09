@@ -37,7 +37,8 @@
   async function save(){
     const id=document.querySelector('#queueEditId').value,caption=document.querySelector('#queueEditCaption').value.trim(),title=document.querySelector('#queueEditTitle').value.trim(),dt=document.querySelector('#queueEditSchedule').value,msg=document.querySelector('#queueEditMsg'),btn=document.querySelector('#queueEditSave');
     if(!caption){msg.textContent='El copy no puede quedar vacío.';msg.className='queue-edit-msg error';return;}
-    if(!dt){msg.textContent='Elige fecha y hora.';msg.className='queue-edit-msg error';return;}
+    if(!dt||Number.isNaN(new Date(dt).getTime())){msg.textContent='Elige una fecha y hora válidas.';msg.className='queue-edit-msg error';return;}
+    if(new Date(dt).getTime()<=Date.now()){msg.textContent='La fecha debe estar en el futuro.';msg.className='queue-edit-msg error';return;}
     btn.disabled=true;msg.textContent='Guardando...';msg.className='queue-edit-msg';
     try{await api({action:'update_scheduled',id,title,caption,scheduled_at:new Date(dt).toISOString()});msg.textContent='Cambios guardados.';setTimeout(()=>dialog.close(),450);await refreshQueue();}
     catch(e){msg.textContent=e.message+(e.detail?' · '+e.detail:'');msg.className='queue-edit-msg error';}
@@ -45,13 +46,16 @@
   }
   async function refreshQueue(){
     const root=document.querySelector('#aiQueue');if(!root)return;
+    if(!getPin()){root.innerHTML='<p class="helper">Ingresa el PIN para cargar la cola.</p>';return;}
     try{const d=await api({action:'list'}),items=(d.items||[]).filter(x=>['scheduled','publishing','ready','draft','failed'].includes(x.status)||Boolean(x.error_message));cache=new Map(items.map(x=>[x.id,x]));if(!items.length){root.innerHTML='<p class="helper">No hay publicaciones pendientes ni errores.</p>';return;}root.innerHTML=items.slice(0,20).map(x=>{const count=Array.isArray(x.media_items)&&x.media_items.length?x.media_items.length:(x.media_type==='CAROUSEL_ALBUM'?2:1),editable=editableStatuses.has(x.status);return `<div class="queue-item queue-editable"><div class="queue-thumb"><img src="${esc(x.media_url||'')}" alt="">${count>1?`<span class="queue-count">${count}</span>`:''}</div><div><span class="queue-brand">${esc(brandLabel(x.brand_id))}</span><strong style="display:block">${esc(x.title||x.brand_id)}</strong><small>${x.scheduled_at?new Date(x.scheduled_at).toLocaleString('es-CL'):'Sin fecha'}${count>1?' · Carrusel':''}</small>${x.error_message?`<small class="queue-error">${esc(x.error_message)}</small>`:''}</div><div class="queue-right"><span class="queue-state ${esc(x.status)}">${labelStatus(x.status)}</span>${editable?`<div class="queue-edit-actions"><button type="button" class="queue-edit-btn" data-edit-queue="${esc(x.id)}">Editar</button></div>`:''}</div></div>`}).join('');root.querySelectorAll('[data-edit-queue]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.editQueue)));}
-    catch{}
+    catch(e){root.innerHTML=`<p class="queue-error">No se pudo cargar la cola: ${esc(e.message)}</p>`;}
   }
   document.querySelector('#queueEditClose').addEventListener('click',()=>dialog.close());
   document.querySelector('#queueEditCancel').addEventListener('click',()=>dialog.close());
   document.querySelector('#queueEditSave').addEventListener('click',save);
   const refreshBtn=document.querySelector('#aiRefreshQueue');if(refreshBtn)refreshBtn.addEventListener('click',()=>setTimeout(refreshQueue,180));
+  window.addEventListener('laberinto:authenticated',refreshQueue);
+  window.addEventListener('laberinto:queue-updated',refreshQueue);
   setTimeout(refreshQueue,500);
   setInterval(refreshQueue,30000);
 })();

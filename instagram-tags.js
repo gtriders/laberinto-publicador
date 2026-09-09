@@ -45,10 +45,11 @@
     let body=null;
     if(url===MAIN_API&&init?.method==='POST'&&typeof init.body==='string'){try{body=JSON.parse(init.body);}catch{}}
     const response=await nativeFetch(input,init);
-    if(response.ok&&body?.action==='schedule'&&composerTags.length){try{const data=await response.clone().json();const id=data?.item?.id;if(id){await tagsCall({action:'set',id,user_tags:composerTags});composerTags=[];const box=document.querySelector('#composerInstagramTags');if(box)renderBox(box,composerTags,Math.max(1,document.querySelectorAll('#mediaGrid .media-card').length),'composer');}}catch(e){console.error('instagram tags schedule',e);}}
-    if(response.ok&&body?.action==='update_scheduled'&&editorTags.length>=0){try{await tagsCall({action:'set',id:body.id,user_tags:editorTags});}catch(e){console.error('instagram tags update',e);}}
+    if(response.ok&&body?.action==='schedule'&&composerTags.length){try{const data=await response.clone().json();const id=data?.item?.id;if(id){await tagsCall({action:'set',id,user_tags:composerTags});composerTags=[];const box=document.querySelector('#composerInstagramTags');if(box)renderBox(box,composerTags,Math.max(1,document.querySelectorAll('#mediaGrid .media-card').length),'composer');}}catch(e){console.error('instagram tags schedule',e);setTimeout(()=>window.dispatchEvent(new CustomEvent('laberinto:tags-warning',{detail:{message:'La publicación quedó programada, pero las etiquetas de Instagram no se guardaron. Ábrela en la cola y vuelve a guardarlas.'}})),0);}}
+    if(response.ok&&body?.action==='update_scheduled'&&editorTags.length>=0){try{await tagsCall({action:'set',id:body.id,user_tags:editorTags});}catch(e){console.error('instagram tags update',e);const msg=document.querySelector('#queueEditMsg');if(msg){msg.textContent='Los cambios se guardaron, pero fallaron las etiquetas de Instagram.';msg.className='queue-edit-msg error';}}}
     return response;
   };
 
+  window.addEventListener('laberinto:composer-reset',()=>{composerTags=[];const box=document.querySelector('#composerInstagramTags');if(box)renderBox(box,composerTags,1,'composer');});
   let tries=0;const timer=setInterval(()=>{tries++;const a=mountComposer(),b=mountEditor();if((a&&b)||tries>80)clearInterval(timer);},150);mountComposer();mountEditor();
 })();
