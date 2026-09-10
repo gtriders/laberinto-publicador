@@ -1,31 +1,180 @@
 (() => {
- const PIN='laberinto_session_pin', API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/image-studio';
- const frames=[
-  {id:'productexplosion',name:'Product Explosion',desc:'Producto protagonista con sus ingredientes reales separados alrededor.',needs:'ingredients',icon:'✦',visual:'explosion'},
-  {id:'magazine',name:'Magazine',desc:'Composición editorial con dirección de arte y espacio para titular.',needs:'context',icon:'Aa',visual:'magazine'},
-  {id:'hero',name:'Hero Product',desc:'Producto limpio y protagonista, pensado para publicidad.',needs:'context',icon:'●',visual:'hero'},
-  {id:'ingredients',name:'Ingredientes',desc:'Producto acompañado únicamente por ingredientes confirmados.',needs:'ingredients',icon:'◌',visual:'ingredients'},
-  {id:'creative-context',name:'Contexto creativo',desc:'Sitúa el producto en una escena creativa coherente con la marca.',needs:'context',icon:'◇',visual:'creative'},
-  {id:'poster',name:'Poster',desc:'Afiche visual con producto protagonista y espacio para texto.',needs:'context',icon:'▣',visual:'poster'}
- ];
- const css=document.createElement('style');css.textContent=`.studio-view{display:none}.studio-view.active{display:block}.frame-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.frame-card{border:1px solid #e7dfd2;background:#fff;border-radius:16px;padding:10px;text-align:left;cursor:pointer;min-width:0}.frame-card.active{outline:2px solid #111827}.frame-card strong,.frame-card span{display:block}.frame-card .frame-name{font-size:.9rem;margin:9px 2px 0}.frame-card .frame-slug{font-size:.72rem;color:#8a8176;margin:2px}.frame-card .frame-desc{font-size:.78rem;color:#756b5d;margin:5px 2px 2px;line-height:1.35}.frame-visual{height:105px;border-radius:11px;background:#f3efe8;position:relative;overflow:hidden}.frame-visual:before,.frame-visual:after{content:'';position:absolute}.frame-visual .fv-product{position:absolute;left:50%;top:54%;width:48px;height:34px;transform:translate(-50%,-50%);background:#252525;border-radius:50%;box-shadow:0 8px 18px rgba(0,0,0,.12)}.frame-visual.explosion:before{width:8px;height:8px;border-radius:50%;background:#777;left:18%;top:24%;box-shadow:55px -5px 0 #999,105px 12px 0 #666,18px 55px 0 #aaa,94px 60px 0 #888,45px 68px 0 #bbb}.frame-visual.magazine:before{content:'EDITORIAL';font-size:9px;font-weight:900;letter-spacing:.12em;left:9px;top:10px}.frame-visual.magazine:after{width:42%;height:2px;background:#222;left:9px;top:27px}.frame-visual.magazine .fv-product{left:68%;top:63%;width:58px;height:58px}.frame-visual.hero{background:linear-gradient(145deg,#f7f4ee,#ded8cf)}.frame-visual.hero .fv-product{width:74px;height:48px;top:58%;box-shadow:0 13px 20px rgba(0,0,0,.2)}.frame-visual.ingredients:before{width:12px;height:12px;border-radius:50%;border:2px solid #777;left:17%;top:23%;box-shadow:91px 4px 0 -2px #f3efe8,91px 4px 0 0 #777,12px 54px 0 -2px #f3efe8,12px 54px 0 0 #999,80px 58px 0 -2px #f3efe8,80px 58px 0 0 #888}.frame-visual.creative{background:linear-gradient(155deg,#ece5d8 0 52%,#d3c8b7 52%)}.frame-visual.creative:before{width:70px;height:70px;border:1px solid #aaa;border-radius:50%;right:-20px;top:-25px}.frame-visual.creative .fv-product{transform:translate(-50%,-50%) rotate(-8deg)}.frame-visual.poster:before{content:'TU IDEA';font-size:13px;font-weight:950;letter-spacing:-.04em;left:10px;top:9px}.frame-visual.poster:after{content:'CAMPAÑA';font-size:7px;font-weight:800;letter-spacing:.15em;left:11px;top:28px;color:#777}.frame-visual.poster .fv-product{top:70%;width:64px;height:42px}.studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.studio-drop{border:2px dashed #d8cfc0;border-radius:16px;min-height:260px;display:grid;place-items:center;padding:18px;text-align:center;cursor:pointer}.studio-preview{max-width:100%;max-height:420px;border-radius:14px}.ai-question{background:#f7f2ea;border-radius:14px;padding:14px;margin-top:12px}.ai-question textarea{width:100%;margin-top:8px}.studio-status{margin-top:10px;font-size:.9rem;color:#62594d}.studio-result{margin-top:16px;display:none}.studio-result.active{display:block}.studio-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.studio-compare figure{margin:0;border:1px solid #e7dfd2;border-radius:16px;padding:10px;background:#fff}.studio-compare figcaption{font-size:.78rem;font-weight:800;margin-bottom:8px}.studio-compare img{width:100%;border-radius:12px;display:block}.studio-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.studio-inspection{font-size:.84rem;color:#62594d;margin-top:8px}.studio-loading{opacity:.65;pointer-events:none}@media(max-width:760px){.frame-grid{grid-template-columns:1fr 1fr;gap:9px}.frame-card{padding:8px}.frame-visual{height:90px}.frame-card .frame-desc{font-size:.72rem}.studio-grid,.studio-compare{grid-template-columns:1fr}}`;document.head.appendChild(css);
- const postForm=async(action,file,extra={})=>{const fd=new FormData();fd.append('action',action);fd.append('pin',sessionStorage.getItem(PIN)||'');fd.append('file',file,file.name||'input.jpg');Object.entries(extra).forEach(([k,v])=>fd.append(k,String(v??'')));const r=await fetch(API,{method:'POST',body:fd}),d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||'Error de conexión');e.detail=d.detail||'';throw e;}return d;};
- function boot(){const tabs=document.querySelector('.app-tabs'),settings=document.querySelector('#settingsView'),publicador=document.querySelector('main.main-view');if(!tabs||!settings||!publicador)return setTimeout(boot,150);if(document.querySelector('#tabStudio'))return;
-  const planner=document.querySelector('#tabPlanner'),btn=document.createElement('button');btn.id='tabStudio';btn.className='app-tab';btn.type='button';btn.textContent='Estudio IA';planner?.insertAdjacentElement('afterend',btn)||tabs.insertBefore(btn,document.querySelector('#tabSettings'));
-  const view=document.createElement('main');view.id='studioView';view.className='shell studio-view';view.innerHTML=`<section class="panel"><div class="panel-heading"><div><span class="eyebrow">ESTUDIO IA</span><h2>Crear y optimizar imágenes</h2></div></div><p class="helper">Sube una foto, elige un estilo y deja que la IA confirme lo que no puede saber antes de crear. Las miniaturas son solo una guía visual del estilo y no consumen créditos.</p><div class="studio-grid"><div><label>Marca<select id="studioBrand"><option value="adria-sushi">Adrià Sushi</option><option value="adria-sangucheria">Sanguchería Adrià</option><option value="pet">Adrià PET</option><option value="chef-rafael">Chef Rafael</option><option value="laberinto-digital">Laberinto Digital</option></select></label><div id="studioDrop" class="studio-drop"><div id="studioSourceWrap"><strong>Subir imagen</strong><p>Toca aquí para elegir el producto o fotografía.</p></div><input id="studioFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div><div><span class="eyebrow">ESTILO</span><div id="frameGrid" class="frame-grid">${frames.map((f,i)=>`<button type="button" class="frame-card ${i===0?'active':''}" data-frame="${f.id}"><div class="frame-visual ${f.visual}" aria-hidden="true"><i class="fv-product"></i></div><strong class="frame-name">${f.name}</strong><span class="frame-slug">/${f.id}</span><span class="frame-desc">${f.desc}</span></button>`).join('')}</div></div></div><div id="studioQuestion" class="ai-question" hidden><strong id="studioQuestionTitle">Necesito confirmar algo</strong><p id="studioQuestionText"></p><div id="studioInspection" class="studio-inspection"></div><textarea id="studioAnswer" rows="3" placeholder="Escribe aquí la información que falta…"></textarea></div><label style="margin-top:14px">Idea opcional<textarea id="studioIdea" rows="2" placeholder="Ej: fondo oscuro, mantener el sushi idéntico, escena de barrio…"></textarea></label><div class="studio-actions"><button id="studioAnalyze" class="btn secondary" type="button">Analizar antes de crear</button><button id="studioGenerate" class="btn primary" type="button" disabled>Generar imagen</button></div><div id="studioStatus" class="studio-status">Primero sube una imagen.</div><div id="studioResult" class="studio-result"><div class="studio-compare"><figure><figcaption>ORIGINAL</figcaption><img id="studioOriginalPreview" alt="Imagen original"></figure><figure><figcaption>RESULTADO IA</figcaption><img id="studioGeneratedPreview" alt="Imagen generada"></figure></div><div class="studio-actions"><button id="studioRegenerate" class="btn secondary" type="button">Regenerar</button><button id="studioUse" class="btn primary" type="button">Usar en publicación</button></div></div></section>`;settings.insertAdjacentElement('beforebegin',view);
-  let selected=frames[0],file=null,inspection=null,result=null,sourceUrl='';
-  const $=s=>view.querySelector(s),status=t=>$('#studioStatus').textContent=t;
-  const resetResult=()=>{result=null;$('#studioResult').classList.remove('active');$('#studioGenerate').disabled=true;};
-  const hide=()=>view.classList.remove('active');document.querySelector('#tabPublicador')?.addEventListener('click',hide);document.querySelector('#tabPlanner')?.addEventListener('click',hide);document.querySelector('#tabSettings')?.addEventListener('click',hide);
-  btn.onclick=()=>{publicador.classList.add('settings-hidden');settings.classList.remove('active');document.querySelector('#plannerView')?.classList.remove('active');view.classList.add('active');document.querySelectorAll('.app-tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');};
-  $('#frameGrid').querySelectorAll('.frame-card').forEach(x=>x.onclick=()=>{view.querySelectorAll('.frame-card').forEach(y=>y.classList.remove('active'));x.classList.add('active');selected=frames.find(f=>f.id===x.dataset.frame)||frames[0];inspection=null;$('#studioQuestion').hidden=true;$('#studioAnswer').value='';resetResult();if(file)status(`Estilo ${selected.name} elegido. Vuelve a analizar antes de crear.`);});
-  const input=$('#studioFile'),drop=$('#studioDrop');drop.onclick=e=>{if(e.target===input)return;input.click();};input.onchange=()=>{file=input.files?.[0]||null;if(!file)return;if(sourceUrl)URL.revokeObjectURL(sourceUrl);sourceUrl=URL.createObjectURL(file);$('#studioSourceWrap').innerHTML=`<img class="studio-preview" src="${sourceUrl}" alt="Vista previa original"><p class="helper">Toca la imagen para cambiarla</p>`;$('#studioOriginalPreview').src=sourceUrl;inspection=null;$('#studioQuestion').hidden=true;$('#studioAnswer').value='';resetResult();status('Imagen lista. Pulsa “Analizar antes de crear”.');};
-  async function inspect(){if(!file){status('Sube primero una imagen.');return;}const b=$('#studioAnalyze');b.disabled=true;view.classList.add('studio-loading');status('La IA está revisando el producto y buscando qué necesita confirmar…');try{const d=await postForm('inspect',file,{brand_id:$('#studioBrand').value,frame:selected.id,idea:$('#studioIdea').value});inspection=d.inspection||{};const visible=Array.isArray(inspection.visible_elements)?inspection.visible_elements.join(', '):'';$('#studioInspection').textContent=[inspection.product_guess?`Creo que veo: ${inspection.product_guess}.`:'',visible?`Visible: ${visible}.`:'',inspection.notes||''].filter(Boolean).join(' ');if(inspection.ready){$('#studioQuestion').hidden=true;$('#studioGenerate').disabled=false;status('La IA tiene suficiente información. Puedes generar o agregar una indicación opcional.');}else{$('#studioQuestion').hidden=false;$('#studioQuestionTitle').textContent='La IA necesita confirmar algo contigo';$('#studioQuestionText').textContent=inspection.question||'Confirma la información que no pueda deducirse con seguridad.';$('#studioAnswer').placeholder=inspection.suggested_answer_hint||'Escribe aquí la información confirmada…';$('#studioGenerate').disabled=true;status('Responde la pregunta y luego genera.');}}catch(e){status(e.message+(e.detail?` — ${e.detail}`:''));}finally{b.disabled=false;view.classList.remove('studio-loading');}}
-  $('#studioAnswer').addEventListener('input',()=>{if(inspection&&!inspection.ready)$('#studioGenerate').disabled=!$('#studioAnswer').value.trim();});
-  async function generate(){if(!file)return;const ans=$('#studioAnswer').value.trim();if(inspection&&!inspection.ready&&!ans){status('Responde primero la pregunta de la IA.');return;}if(selected.needs==='ingredients'&&!ans){status('Confirma los ingredientes antes de generar.');return;}const b=$('#studioGenerate');b.disabled=true;view.classList.add('studio-loading');status(`Generando /${selected.id} con GPT-Image-2… puede tardar un poco.`);try{const d=await postForm('generate',file,{brand_id:$('#studioBrand').value,frame:selected.id,answer:ans,idea:$('#studioIdea').value,inspection:inspection?JSON.stringify(inspection):''});result=d;$('#studioGeneratedPreview').src=d.media_url;$('#studioResult').classList.add('active');status('Imagen lista. Puedes regenerarla o enviarla al Publicador.');$('#studioResult').scrollIntoView({behavior:'smooth',block:'center'});}catch(e){status(e.message+(e.detail?` — ${e.detail}`:''));}finally{b.disabled=false;view.classList.remove('studio-loading');}}
-  $('#studioAnalyze').onclick=inspect;$('#studioGenerate').onclick=generate;$('#studioRegenerate').onclick=generate;
-  $('#studioUse').onclick=()=>{if(!result)return;const resultAnalysis=result.analysis||{},hashtags=Array.isArray(result.hashtags)?result.hashtags:(Array.isArray(resultAnalysis.hashtags)?resultAnalysis.hashtags:[]),baseCaption=result.caption||result.copy||result.post_caption||resultAnalysis.caption||'',caption=baseCaption+(baseCaption&&hashtags.length?'\n\n'+hashtags.join(' '):''),idea=$('#studioIdea').value.trim(),answer=$('#studioAnswer').value.trim(),visible=Array.isArray(inspection?.visible_elements)?inspection.visible_elements.join(', '):'',context=[`Creada en Estudio IA /${selected.id}`,idea,answer?`Información confirmada por Rafael: ${answer}`:'',inspection?.product_guess?`Producto identificado: ${inspection.product_guess}`:'',visible?`Elementos visibles: ${visible}`:'',inspection?.notes||''].filter(Boolean).join('. ');window.dispatchEvent(new CustomEvent('laberinto:studio-media',{detail:{media_url:result.media_url,media_path:result.media_path,brand_id:$('#studioBrand').value,frame:selected.id,title:result.title||resultAnalysis.title||'',caption,context,studio_analysis:{...(inspection||{}),frame:selected.id,idea,answer}}}));document.querySelector('#tabPublicador')?.click();status('Imagen y texto enviados al Publicador.');};
-  $('#studioBrand').addEventListener('change',()=>{inspection=null;$('#studioQuestion').hidden=true;resetResult();if(file)status('Marca cambiada. Vuelve a analizar para aplicar su identidad visual.');});
- }
- boot();
+  const PIN='laberinto_session_pin';
+  const API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/image-studio';
+  const frames=[
+    {id:'productexplosion',name:'Product Explosion',short:'Ingredientes alrededor',desc:'Mantiene el producto como protagonista y separa alrededor solo los ingredientes reales confirmados.',needs:'ingredients',icon:'✦'},
+    {id:'magazine',name:'Magazine',short:'Editorial',desc:'Convierte la foto en una composición editorial limpia con espacio visual para un titular.',needs:'context',icon:'Aa'},
+    {id:'hero',name:'Hero Product',short:'Producto protagonista',desc:'Limpia la escena y convierte el producto real en el único protagonista de la imagen.',needs:'context',icon:'●'},
+    {id:'ingredients',name:'Ingredientes',short:'Producto + ingredientes',desc:'Acompaña el producto únicamente con ingredientes reales que tú confirmes.',needs:'ingredients',icon:'◌'},
+    {id:'creative-context',name:'Contexto creativo',short:'Escena creativa',desc:'Mantiene el producto real y lo sitúa en una escena creativa coherente con la marca.',needs:'context',icon:'◇'},
+    {id:'poster',name:'Poster',short:'Afiche',desc:'Crea una imagen publicitaria fuerte con el producto protagonista y espacio para texto posterior.',needs:'context',icon:'▣'}
+  ];
+
+  const css=document.createElement('style');
+  css.textContent=`
+    .studio-view{display:none}.studio-view.active{display:block}.studio-panel{max-width:1040px;margin-inline:auto}
+    .studio-head{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}.studio-head h2{margin-bottom:4px}.studio-brand{display:grid;gap:5px;min-width:220px;font-size:.78rem;font-weight:800;color:#756b5d}
+    .studio-work{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(340px,1.2fr);gap:18px;margin-top:16px}.studio-step{display:grid;gap:10px}.studio-step-title{display:flex;align-items:center;gap:8px;font-weight:850}.studio-step-num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#111827;color:#fff;font-size:.75rem}
+    .studio-drop{border:1.5px dashed #d8cfc0;border-radius:15px;min-height:260px;display:grid;place-items:center;padding:16px;text-align:center;cursor:pointer;background:#faf9f6}.studio-drop strong{display:block;font-size:1rem}.studio-drop p{margin:5px 0 0;color:#756b5d;font-size:.86rem}.studio-preview{max-width:100%;max-height:390px;border-radius:12px;display:block;margin:auto}
+    .frame-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.frame-card{display:grid;gap:3px;min-height:72px;border:1px solid #e5ddd2;background:#fff;border-radius:12px;padding:10px;text-align:left;cursor:pointer}.frame-card:hover{background:#faf8f4}.frame-card.active{border-color:#111827;box-shadow:inset 0 0 0 1px #111827;background:#fafafa}.frame-card .frame-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.frame-card .frame-icon{font-size:.9rem;font-weight:900;color:#776a58}.frame-card strong{font-size:.84rem;line-height:1.2}.frame-card small{font-size:.72rem;color:#81786c;line-height:1.25}.studio-frame-help{margin:0;padding:10px 12px;background:#f7f2ea;border-radius:10px;color:#62594d;font-size:.84rem;line-height:1.4}
+    .studio-more{border-top:1px solid #eee7dd;padding-top:9px}.studio-more summary{cursor:pointer;font-weight:750;font-size:.86rem;color:#5f574d}.studio-more textarea{width:100%;margin-top:8px;min-height:70px}.ai-question{background:#f7f2ea;border-radius:12px;padding:12px;margin-top:2px}.ai-question p{margin:5px 0}.ai-question textarea{width:100%;margin-top:7px;min-height:72px}.studio-inspection{font-size:.8rem;color:#74695d;margin-top:4px}.studio-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.studio-actions .btn{min-width:140px}.studio-status{font-size:.86rem;color:#62594d;min-height:1.3em}.studio-loading{opacity:.65;pointer-events:none}
+    .studio-result{margin-top:18px;display:none;border-top:1px solid #eee7dd;padding-top:16px}.studio-result.active{display:block}.studio-result-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.studio-result-head h3{margin:0}.studio-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studio-compare figure{margin:0;border:1px solid #e7dfd2;border-radius:13px;padding:8px;background:#fff}.studio-compare figcaption{font-size:.72rem;font-weight:850;margin-bottom:6px;color:#756b5d}.studio-compare img{width:100%;border-radius:9px;display:block}
+    @media(max-width:760px){.studio-work,.studio-compare{grid-template-columns:1fr}.frame-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.studio-drop{min-height:210px}.studio-head{align-items:stretch}.studio-brand{width:100%}.studio-actions .btn{flex:1 1 140px}}
+  `;
+  document.head.appendChild(css);
+
+  const postForm=async(action,file,extra={})=>{
+    const fd=new FormData();
+    fd.append('action',action);
+    fd.append('pin',sessionStorage.getItem(PIN)||'');
+    fd.append('file',file,file.name||'input.jpg');
+    Object.entries(extra).forEach(([k,v])=>fd.append(k,String(v??'')));
+    const r=await fetch(API,{method:'POST',body:fd});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){const e=new Error(d.error||'Error de conexión');e.detail=d.detail||'';throw e;}
+    return d;
+  };
+
+  function boot(){
+    const tabs=document.querySelector('.app-tabs');
+    const settings=document.querySelector('#settingsView');
+    const publicador=document.querySelector('main.main-view');
+    if(!tabs||!settings||!publicador)return setTimeout(boot,150);
+    if(document.querySelector('#tabStudio'))return;
+
+    const planner=document.querySelector('#tabPlanner');
+    const btn=document.createElement('button');
+    btn.id='tabStudio';btn.className='app-tab';btn.type='button';btn.textContent='Estudio IA';
+    planner?.insertAdjacentElement('afterend',btn)||tabs.insertBefore(btn,document.querySelector('#tabSettings'));
+
+    const view=document.createElement('main');
+    view.id='studioView';view.className='shell studio-view';
+    view.innerHTML=`<section class="panel studio-panel">
+      <div class="studio-head">
+        <div><span class="eyebrow">ESTUDIO IA</span><h2>Mejora una foto</h2><p class="helper" style="margin:0">Usa una foto real como base. La IA pregunta solo si necesita confirmar algo.</p></div>
+        <label class="studio-brand">MARCA<select id="studioBrand"><option value="adria-sushi">Adrià Sushi</option><option value="adria-sangucheria">Sanguchería Adrià</option><option value="pet">Adrià PET</option><option value="chef-rafael">Chef Rafael</option><option value="laberinto-digital">Laberinto Digital</option></select></label>
+      </div>
+      <div class="studio-work">
+        <div class="studio-step"><div class="studio-step-title"><span class="studio-step-num">1</span>Sube la foto</div><div id="studioDrop" class="studio-drop"><div id="studioSourceWrap"><strong>Elegir imagen</strong><p>Producto o fotografía real.</p></div><input id="studioFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+        <div class="studio-step"><div class="studio-step-title"><span class="studio-step-num">2</span>Elige un estilo</div><div id="frameGrid" class="frame-grid">${frames.map((f,i)=>`<button type="button" class="frame-card ${i===0?'active':''}" data-frame="${f.id}"><span class="frame-top"><strong>${f.name}</strong><span class="frame-icon">${f.icon}</span></span><small>${f.short}</small></button>`).join('')}</div><p id="studioFrameHelp" class="studio-frame-help">${frames[0].desc}</p><details class="studio-more"><summary>Agregar indicación opcional</summary><textarea id="studioIdea" rows="2" placeholder="Ej: fondo oscuro, escena de barrio, mantener la presentación idéntica…"></textarea></details><div id="studioQuestion" class="ai-question" hidden><strong id="studioQuestionTitle">Necesito confirmar algo</strong><p id="studioQuestionText"></p><div id="studioInspection" class="studio-inspection"></div><textarea id="studioAnswer" rows="3" placeholder="Escribe aquí la información confirmada…"></textarea></div><div class="studio-actions"><button id="studioAnalyze" class="btn secondary" type="button">Revisar foto</button><button id="studioGenerate" class="btn primary" type="button" disabled>Crear imagen</button></div><div id="studioStatus" class="studio-status">Primero sube una imagen.</div></div>
+      </div>
+      <div id="studioResult" class="studio-result"><div class="studio-result-head"><div><span class="eyebrow">RESULTADO</span><h3>Imagen lista</h3></div></div><div class="studio-compare"><figure><figcaption>ORIGINAL</figcaption><img id="studioOriginalPreview" alt="Imagen original"></figure><figure><figcaption>RESULTADO IA</figcaption><img id="studioGeneratedPreview" alt="Imagen generada"></figure></div><div class="studio-actions" style="margin-top:10px"><button id="studioRegenerate" class="btn secondary" type="button">Crear otra versión</button><button id="studioUse" class="btn primary" type="button">Enviar al Publicador</button></div></div>
+    </section>`;
+    settings.insertAdjacentElement('beforebegin',view);
+
+    let selected=frames[0],file=null,inspection=null,result=null,sourceUrl='';
+    const $=s=>view.querySelector(s);
+    const status=t=>$('#studioStatus').textContent=t;
+    const resetResult=()=>{result=null;$('#studioResult').classList.remove('active');$('#studioGenerate').disabled=true;};
+    const resetInspection=()=>{inspection=null;$('#studioQuestion').hidden=true;$('#studioAnswer').value='';resetResult();};
+    const hide=()=>view.classList.remove('active');
+
+    document.querySelector('#tabPublicador')?.addEventListener('click',hide);
+    document.querySelector('#tabPlanner')?.addEventListener('click',hide);
+    document.querySelector('#tabSettings')?.addEventListener('click',hide);
+
+    btn.onclick=()=>{
+      publicador.classList.add('settings-hidden');
+      settings.classList.remove('active');
+      document.querySelector('#plannerView')?.classList.remove('active');
+      document.querySelector('#ugcView')?.classList.remove('active');
+      view.classList.add('active');
+      document.querySelectorAll('.app-tab').forEach(x=>x.classList.remove('active'));
+      btn.classList.add('active');
+    };
+
+    $('#frameGrid').querySelectorAll('.frame-card').forEach(card=>card.onclick=()=>{
+      view.querySelectorAll('.frame-card').forEach(x=>x.classList.remove('active'));
+      card.classList.add('active');
+      selected=frames.find(f=>f.id===card.dataset.frame)||frames[0];
+      $('#studioFrameHelp').textContent=selected.desc;
+      resetInspection();
+      if(file)status(`${selected.name} seleccionado. Revisa la foto antes de crear.`);
+    });
+
+    const input=$('#studioFile');
+    const drop=$('#studioDrop');
+    drop.onclick=e=>{if(e.target===input)return;input.click();};
+    input.onchange=()=>{
+      file=input.files?.[0]||null;
+      if(!file)return;
+      if(sourceUrl)URL.revokeObjectURL(sourceUrl);
+      sourceUrl=URL.createObjectURL(file);
+      $('#studioSourceWrap').innerHTML=`<img class="studio-preview" src="${sourceUrl}" alt="Vista previa original"><p class="helper">Toca la foto para cambiarla</p>`;
+      $('#studioOriginalPreview').src=sourceUrl;
+      resetInspection();
+      status('Foto lista. Ahora elige el estilo y pulsa “Revisar foto”.');
+    };
+
+    async function inspect(){
+      if(!file){status('Sube primero una imagen.');return;}
+      const b=$('#studioAnalyze');
+      b.disabled=true;view.classList.add('studio-loading');status('Revisando la foto…');
+      try{
+        const d=await postForm('inspect',file,{brand_id:$('#studioBrand').value,frame:selected.id,idea:$('#studioIdea').value});
+        inspection=d.inspection||{};
+        const visible=Array.isArray(inspection.visible_elements)?inspection.visible_elements.join(', '):'';
+        $('#studioInspection').textContent=[inspection.product_guess?`Veo: ${inspection.product_guess}.`:'',visible?`Visible: ${visible}.`:'',inspection.notes||''].filter(Boolean).join(' ');
+        if(inspection.ready){
+          $('#studioQuestion').hidden=true;
+          $('#studioGenerate').disabled=false;
+          status('Todo listo. Puedes crear la imagen.');
+        }else{
+          $('#studioQuestion').hidden=false;
+          $('#studioQuestionTitle').textContent='Confirma esto antes de crear';
+          $('#studioQuestionText').textContent=inspection.question||'Confirma la información que no puede deducirse con seguridad.';
+          $('#studioAnswer').placeholder=inspection.suggested_answer_hint||'Escribe aquí la información confirmada…';
+          $('#studioGenerate').disabled=true;
+          status('Responde la pregunta y podrás crear la imagen.');
+        }
+      }catch(e){status(e.message+(e.detail?` — ${e.detail}`:''));}
+      finally{b.disabled=false;view.classList.remove('studio-loading');}
+    }
+
+    $('#studioAnswer').addEventListener('input',()=>{
+      if(inspection&&!inspection.ready)$('#studioGenerate').disabled=!$('#studioAnswer').value.trim();
+    });
+
+    async function generate(){
+      if(!file)return;
+      const ans=$('#studioAnswer').value.trim();
+      if(inspection&&!inspection.ready&&!ans){status('Responde primero la pregunta.');return;}
+      if(selected.needs==='ingredients'&&!ans){status('Confirma los ingredientes antes de crear.');return;}
+      const b=$('#studioGenerate');
+      b.disabled=true;view.classList.add('studio-loading');status('Creando imagen…');
+      try{
+        const d=await postForm('generate',file,{brand_id:$('#studioBrand').value,frame:selected.id,answer:ans,idea:$('#studioIdea').value,inspection:inspection?JSON.stringify(inspection):''});
+        result=d;
+        $('#studioGeneratedPreview').src=d.media_url;
+        $('#studioResult').classList.add('active');
+        status('Imagen lista. Revísala o envíala al Publicador.');
+        $('#studioResult').scrollIntoView({behavior:'smooth',block:'center'});
+      }catch(e){status(e.message+(e.detail?` — ${e.detail}`:''));}
+      finally{b.disabled=false;view.classList.remove('studio-loading');}
+    }
+
+    $('#studioAnalyze').onclick=inspect;
+    $('#studioGenerate').onclick=generate;
+    $('#studioRegenerate').onclick=generate;
+    $('#studioUse').onclick=()=>{
+      if(!result)return;
+      const resultAnalysis=result.analysis||{};
+      const hashtags=Array.isArray(result.hashtags)?result.hashtags:(Array.isArray(resultAnalysis.hashtags)?resultAnalysis.hashtags:[]);
+      const baseCaption=result.caption||result.copy||result.post_caption||resultAnalysis.caption||'';
+      const caption=baseCaption+(baseCaption&&hashtags.length?'\n\n'+hashtags.join(' '):'');
+      const idea=$('#studioIdea').value.trim();
+      const answer=$('#studioAnswer').value.trim();
+      const visible=Array.isArray(inspection?.visible_elements)?inspection.visible_elements.join(', '):'';
+      const context=[`Creada en Estudio IA /${selected.id}`,idea,answer?`Información confirmada por Rafael: ${answer}`:'',inspection?.product_guess?`Producto identificado: ${inspection.product_guess}`:'',visible?`Elementos visibles: ${visible}`:'',inspection?.notes||''].filter(Boolean).join('. ');
+      window.dispatchEvent(new CustomEvent('laberinto:studio-media',{detail:{media_url:result.media_url,media_path:result.media_path,brand_id:$('#studioBrand').value,frame:selected.id,title:result.title||resultAnalysis.title||'',caption,context,studio_analysis:{...(inspection||{}),frame:selected.id,idea,answer}}}));
+      document.querySelector('#tabPublicador')?.click();
+      status('Imagen enviada al Publicador.');
+    };
+
+    $('#studioBrand').addEventListener('change',()=>{
+      resetInspection();
+      if(file)status('Marca cambiada. Revisa la foto nuevamente.');
+    });
+  }
+  boot();
 })();
