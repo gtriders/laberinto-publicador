@@ -1,26 +1,30 @@
 (() => {
-  document.querySelectorAll('.integration-panel').forEach(node => node.remove());
   const SUPABASE_URL='https://ufsxdlmnjuaymdszyjue.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_eHnq_wktiWAmzlm0yzRnow_KKLrR2pN';
   const GOOGLE_OAUTH_FUNCTION=SUPABASE_URL+'/functions/v1/google-business-oauth';
   const GOOGLE_API_FUNCTION=SUPABASE_URL+'/functions/v1/google-business-api';
   const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-  const panel=document.createElement('section');
-  panel.className='panel integration-panel';
-  panel.innerHTML='<div class="panel-heading"><div><span class="eyebrow">DATOS CENTRALES</span><h2>Conexiones</h2></div><span id="supabaseBadge" class="badge ready">Conectando...</span></div><p id="supabaseMessage" class="helper">Estamos comprobando la biblioteca compartida.</p><div id="supabaseBrands" class="connection-list"></div><div class="connection-actions"><button id="googleConnectButton" class="btn secondary" type="button">Conectar Google</button><button id="googleLocationsButton" class="btn secondary" type="button">Comprobar perfiles Google</button><span id="googleLocationsMessage" class="helper"></span><span id="googleConnectionMessage" class="helper">Google Business Profile pendiente de comprobación.</span></div>';
-  document.querySelector('main')?.prepend(panel);
+  const grid=document.querySelector('#settingsView .settings-grid');
+  if(!grid)return;
+  const panel=document.createElement('article');
+  panel.id='settingsCentralData';
+  panel.className='settings-card settings-full integration-panel';
+  panel.innerHTML='<div class="panel-heading"><div><span class="eyebrow">DATOS CENTRALES</span><h3>Sistema y conexiones</h3></div><span id="supabaseBadge" class="badge ready">Conectando...</span></div><p id="supabaseMessage" class="helper">Comprobando la biblioteca compartida.</p><div id="supabaseBrands" class="connection-list"></div><div class="connection-actions"><button id="googleConnectButton" class="btn secondary" type="button">Conectar Google</button><button id="googleLocationsButton" class="btn secondary" type="button">Comprobar perfiles Google</button><span id="googleLocationsMessage" class="helper"></span><span id="googleConnectionMessage" class="helper">Google Business Profile pendiente de comprobación.</span></div>';
+  grid.insertBefore(panel,document.querySelector('#settingsHistory')||null);
 
   const googleButton=document.querySelector('#googleConnectButton');
   const locationsButton=document.querySelector('#googleLocationsButton');
   const locationsMessage=document.querySelector('#googleLocationsMessage');
   const googleMessage=document.querySelector('#googleConnectionMessage');
+
   async function readGoogleProfiles(){
     const response=await fetch(GOOGLE_API_FUNCTION);
     const data=await response.json().catch(()=>({}));
     if(!response.ok){const error=new Error(data.error||'No se pudieron leer los perfiles');error.detail=data.detail||'';throw error;}
     return Array.isArray(data.locations)?data.locations:[];
   }
+
   async function refreshGoogleStatus(){
     locationsButton.disabled=true;
     googleMessage.textContent='Comprobando Google Business Profile…';
@@ -56,6 +60,7 @@
     if(googleResult)window.history.replaceState({},document.title,window.location.pathname);
     refreshGoogleStatus();
   }
+
   googleButton?.addEventListener('click',async()=>{
     googleButton.disabled=true;googleMessage.textContent='Abriendo autorización de Google…';
     try{const response=await fetch(GOOGLE_OAUTH_FUNCTION+'?mode=start'),data=await response.json().catch(()=>({}));if(!response.ok||!data.authorization_url)throw new Error(data.error||'No se pudo iniciar Google');window.location.href=data.authorization_url;}
