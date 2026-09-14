@@ -1,6 +1,7 @@
 (() => {
   const PIN='laberinto_session_pin';
   const API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/image-studio';
+  const STORAGE_PUBLIC='https://ufsxdlmnjuaymdszyjue.supabase.co/storage/v1/object/public/laberinto-media/';
   const frames=[
     {id:'productexplosion',name:'Product Explosion',short:'Ingredientes alrededor',desc:'Mantiene el producto como protagonista y separa alrededor solo los ingredientes reales confirmados.',needs:'ingredients',icon:'✦'},
     {id:'magazine',name:'Magazine',short:'Editorial',desc:'Convierte la foto en una composición editorial limpia con espacio visual para un titular.',needs:'context',icon:'Aa'},
@@ -18,7 +19,7 @@
     .studio-drop{border:1.5px dashed #d8cfc0;border-radius:15px;min-height:260px;display:grid;place-items:center;padding:16px;text-align:center;cursor:pointer;background:#faf9f6}.studio-drop strong{display:block;font-size:1rem}.studio-drop p{margin:5px 0 0;color:#756b5d;font-size:.86rem}.studio-preview{max-width:100%;max-height:390px;border-radius:12px;display:block;margin:auto}
     .frame-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.frame-card{display:grid;gap:3px;min-height:72px;border:1px solid #e5ddd2;background:#fff;border-radius:12px;padding:10px;text-align:left;cursor:pointer}.frame-card:hover{background:#faf8f4}.frame-card.active{border-color:#111827;box-shadow:inset 0 0 0 1px #111827;background:#fafafa}.frame-card .frame-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.frame-card .frame-icon{font-size:.9rem;font-weight:900;color:#776a58}.frame-card strong{font-size:.84rem;line-height:1.2}.frame-card small{font-size:.72rem;color:#81786c;line-height:1.25}.studio-frame-help{margin:0;padding:10px 12px;background:#f7f2ea;border-radius:10px;color:#62594d;font-size:.84rem;line-height:1.4}
     .studio-more{border-top:1px solid #eee7dd;padding-top:9px}.studio-more summary{cursor:pointer;font-weight:750;font-size:.86rem;color:#5f574d}.studio-more textarea{width:100%;margin-top:8px;min-height:70px}.ai-question{background:#f7f2ea;border-radius:12px;padding:12px;margin-top:2px}.ai-question p{margin:5px 0}.ai-question textarea{width:100%;margin-top:7px;min-height:72px}.studio-inspection{font-size:.8rem;color:#74695d;margin-top:4px}.studio-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.studio-actions .btn{min-width:140px}.studio-status{font-size:.86rem;color:#62594d;min-height:1.3em}.studio-loading{opacity:.65;pointer-events:none}
-    .studio-result{margin-top:18px;display:none;border-top:1px solid #eee7dd;padding-top:16px}.studio-result.active{display:block}.studio-result-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.studio-result-head h3{margin:0}.studio-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studio-compare figure{margin:0;border:1px solid #e7dfd2;border-radius:13px;padding:8px;background:#fff}.studio-compare figcaption{font-size:.72rem;font-weight:850;margin-bottom:6px;color:#756b5d}.studio-compare img{width:100%;border-radius:9px;display:block}
+    .studio-result{margin-top:18px;display:none;border-top:1px solid #eee7dd;padding-top:16px}.studio-result.active{display:block}.studio-result-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.studio-result-head h3{margin:0}.studio-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}.studio-compare figure{margin:0;border:1px solid #e7dfd2;border-radius:13px;padding:8px;background:#fff}.studio-compare figcaption{font-size:.72rem;font-weight:850;margin-bottom:6px;color:#756b5d}.studio-compare img{width:100%;border-radius:9px;display:block}.studio-preview-error{font-size:.8rem;color:#a33232;margin-top:6px}
     @media(max-width:760px){.studio-work,.studio-compare{grid-template-columns:1fr}.frame-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.studio-drop{min-height:210px}.studio-head{align-items:stretch}.studio-brand{width:100%}.studio-actions .btn{flex:1 1 140px}}
   `;
   document.head.appendChild(css);
@@ -33,6 +34,13 @@
     const d=await r.json().catch(()=>({}));
     if(!r.ok){const e=new Error(d.error||'Error de conexión');e.detail=d.detail||'';throw e;}
     return d;
+  };
+  const publicMediaUrl=result=>{
+    if(result?.media_path){
+      const path=String(result.media_path).split('/').map(encodeURIComponent).join('/');
+      return `${STORAGE_PUBLIC}${path}`;
+    }
+    return result?.media_url||'';
   };
 
   function boot(){
@@ -58,14 +66,14 @@
         <div class="studio-step"><div class="studio-step-title"><span class="studio-step-num">1</span>Sube la foto</div><div id="studioDrop" class="studio-drop"><div id="studioSourceWrap"><strong>Elegir imagen</strong><p>Producto o fotografía real.</p></div><input id="studioFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
         <div class="studio-step"><div class="studio-step-title"><span class="studio-step-num">2</span>Elige un estilo</div><div id="frameGrid" class="frame-grid">${frames.map((f,i)=>`<button type="button" class="frame-card ${i===0?'active':''}" data-frame="${f.id}"><span class="frame-top"><strong>${f.name}</strong><span class="frame-icon">${f.icon}</span></span><small>${f.short}</small></button>`).join('')}</div><p id="studioFrameHelp" class="studio-frame-help">${frames[0].desc}</p><details class="studio-more"><summary>Agregar indicación opcional</summary><textarea id="studioIdea" rows="2" placeholder="Ej: fondo oscuro, escena de barrio, mantener la presentación idéntica…"></textarea></details><div id="studioQuestion" class="ai-question" hidden><strong id="studioQuestionTitle">Necesito confirmar algo</strong><p id="studioQuestionText"></p><div id="studioInspection" class="studio-inspection"></div><textarea id="studioAnswer" rows="3" placeholder="Escribe aquí la información confirmada…"></textarea></div><div class="studio-actions"><button id="studioAnalyze" class="btn secondary" type="button">Revisar foto</button><button id="studioGenerate" class="btn primary" type="button" disabled>Crear imagen</button></div><div id="studioStatus" class="studio-status">Primero sube una imagen.</div></div>
       </div>
-      <div id="studioResult" class="studio-result"><div class="studio-result-head"><div><span class="eyebrow">RESULTADO</span><h3>Imagen lista</h3></div></div><div class="studio-compare"><figure><figcaption>ORIGINAL</figcaption><img id="studioOriginalPreview" alt="Imagen original"></figure><figure><figcaption>RESULTADO IA</figcaption><img id="studioGeneratedPreview" alt="Imagen generada"></figure></div><div class="studio-actions" style="margin-top:10px"><button id="studioRegenerate" class="btn secondary" type="button">Crear otra versión</button><button id="studioUse" class="btn primary" type="button">Enviar al Publicador</button></div></div>
+      <div id="studioResult" class="studio-result"><div class="studio-result-head"><div><span class="eyebrow">RESULTADO</span><h3>Imagen lista</h3></div></div><div class="studio-compare"><figure><figcaption>ORIGINAL</figcaption><img id="studioOriginalPreview" alt="Imagen original"></figure><figure><figcaption>RESULTADO IA</figcaption><img id="studioGeneratedPreview" alt="Imagen generada"><div id="studioPreviewError" class="studio-preview-error" hidden>No pude mostrar la vista previa, pero la imagen quedó guardada. Intenta crear otra versión.</div></figure></div><div class="studio-actions" style="margin-top:10px"><button id="studioRegenerate" class="btn secondary" type="button">Crear otra versión</button><button id="studioUse" class="btn primary" type="button">Enviar al Publicador</button></div></div>
     </section>`;
     settings.insertAdjacentElement('beforebegin',view);
 
     let selected=frames[0],file=null,inspection=null,result=null,sourceUrl='';
     const $=s=>view.querySelector(s);
     const status=t=>$('#studioStatus').textContent=t;
-    const resetResult=()=>{result=null;$('#studioResult').classList.remove('active');$('#studioGenerate').disabled=true;};
+    const resetResult=()=>{result=null;$('#studioResult').classList.remove('active');$('#studioGenerate').disabled=true;$('#studioPreviewError').hidden=true;};
     const resetInspection=()=>{inspection=null;$('#studioQuestion').hidden=true;$('#studioAnswer').value='';resetResult();};
     const hide=()=>view.classList.remove('active');
 
@@ -145,7 +153,17 @@
       try{
         const d=await postForm('generate',file,{brand_id:$('#studioBrand').value,frame:selected.id,answer:ans,idea:$('#studioIdea').value,inspection:inspection?JSON.stringify(inspection):''});
         result=d;
-        $('#studioGeneratedPreview').src=d.media_url;
+        const preview=$('#studioGeneratedPreview');
+        const stableUrl=publicMediaUrl(d);
+        $('#studioPreviewError').hidden=true;
+        preview.onerror=()=>{
+          preview.onerror=null;
+          if(d.media_url&&preview.src!==d.media_url){preview.src=`${d.media_url}${d.media_url.includes('?')?'&':'?'}v=${Date.now()}`;return;}
+          $('#studioPreviewError').hidden=false;
+          status('La imagen se creó y quedó guardada, pero Safari no pudo mostrar la vista previa.');
+        };
+        preview.onload=()=>{$('#studioPreviewError').hidden=true;};
+        preview.src=`${stableUrl}${stableUrl.includes('?')?'&':'?'}v=${Date.now()}`;
         $('#studioResult').classList.add('active');
         status('Imagen lista. Revísala o envíala al Publicador.');
         $('#studioResult').scrollIntoView({behavior:'smooth',block:'center'});
@@ -166,7 +184,8 @@
       const answer=$('#studioAnswer').value.trim();
       const visible=Array.isArray(inspection?.visible_elements)?inspection.visible_elements.join(', '):'';
       const context=[`Creada en Estudio IA /${selected.id}`,idea,answer?`Información confirmada por Rafael: ${answer}`:'',inspection?.product_guess?`Producto identificado: ${inspection.product_guess}`:'',visible?`Elementos visibles: ${visible}`:'',inspection?.notes||''].filter(Boolean).join('. ');
-      window.dispatchEvent(new CustomEvent('laberinto:studio-media',{detail:{media_url:result.media_url,media_path:result.media_path,brand_id:$('#studioBrand').value,frame:selected.id,title:result.title||resultAnalysis.title||'',caption,context,studio_analysis:{...(inspection||{}),frame:selected.id,idea,answer}}}));
+      const mediaUrl=publicMediaUrl(result)||result.media_url;
+      window.dispatchEvent(new CustomEvent('laberinto:studio-media',{detail:{media_url:mediaUrl,media_path:result.media_path,brand_id:$('#studioBrand').value,frame:selected.id,title:result.title||resultAnalysis.title||'',caption,context,studio_analysis:{...(inspection||{}),frame:selected.id,idea,answer}}}));
       document.querySelector('#tabPublicador')?.click();
       status('Imagen enviada al Publicador.');
     };
