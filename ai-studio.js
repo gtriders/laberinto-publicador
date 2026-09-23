@@ -8,7 +8,10 @@
     {id:'hero',name:'Hero Product',short:'Producto protagonista',desc:'Limpia la escena y convierte el producto real en el único protagonista de la imagen.',needs:'context',icon:'●'},
     {id:'ingredients',name:'Ingredientes',short:'Producto + ingredientes',desc:'Acompaña el producto únicamente con ingredientes reales que tú confirmes.',needs:'ingredients',icon:'◌'},
     {id:'creative-context',name:'Contexto creativo',short:'Escena creativa',desc:'Mantiene el producto real y lo sitúa en una escena creativa coherente con la marca.',needs:'context',icon:'◇'},
-    {id:'poster',name:'Poster',short:'Afiche',desc:'Crea una imagen publicitaria fuerte con el producto protagonista y espacio para texto posterior.',needs:'context',icon:'▣'}
+    {id:'poster',name:'Poster',short:'Afiche',desc:'Crea una imagen publicitaria fuerte con el producto protagonista y espacio para texto posterior.',needs:'context',icon:'▣'},
+    {id:'minimalposter-pt',name:'Minimal Poster',short:'Poster minimalista',desc:'Convierte la foto real en un poster limpio y minimalista, con el producto protagonista, fondo simple y mucho aire para agregar texto después.',needs:'context',icon:'◫'},
+    {id:'cleanflyer',name:'Clean Flyer',short:'Flyer limpio',desc:'Crea una pieza tipo flyer muy limpia y comercial, manteniendo el producto real, composición ordenada y zonas libres para título, precio o llamada a la acción posterior.',needs:'context',icon:'▤'},
+    {id:'herooffer-minimal',name:'Hero Offer Minimal',short:'Oferta protagonista',desc:'Presenta el producto como héroe de una oferta visual minimalista, grande y apetitoso, con composición simple y espacio preparado para precio o promoción después.',needs:'context',icon:'◆'}
   ];
 
   const css=document.createElement('style');
