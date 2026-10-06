@@ -96,6 +96,7 @@
         'chef-rafael':'Contar una escena real de cómo se vive San Valentín trabajando en un restaurante.',
         'laberinto-digital':'Mostrar cómo se prepara una campaña estacional simple sin sobrecargar al negocio.'
       },
+      'Día de la Cocina Chilena':{'adria-sushi':'Mostrar oficio, cocina real y una preparación que represente la historia de Adrià.','adria-sangucheria':'Celebrar la fuente de soda chilena con un clásico real de la carta.','chef-rafael':'Contar qué significa cocinar profesionalmente después de años de oficio.'},
       'Día del Completo':{'adria-sangucheria':'Producto protagonista: completo o italiano real, primer plano y CTA directo a la Sanguchería.'},
       'Día Internacional del Sushi':{'adria-sushi':'Elegir un roll representativo de Adrià y contar por qué sigue siendo parte del sushi del barrio.'},
       'Día del Perro':{'pet':'Mascota real del barrio con un snack Adrià PET; natural, sin afirmaciones de salud.'},
@@ -106,6 +107,10 @@
         'chef-rafael':'Contar cómo cambia la operación del restaurante en Fiestas Patrias.',
         'laberinto-digital':'Mostrar una campaña de temporada construida desde una necesidad real de Adrià.'
       },
+      'Día contra el desperdicio de alimentos':{'adria-sushi':'Mostrar una práctica real de aprovechamiento, porcionado o producción responsable sin exagerar.','adria-sangucheria':'Contar una acción concreta de cocina para reducir mermas.','chef-rafael':'Compartir una práctica aprendida operando cocina para controlar desperdicios.'},
+      'Día Internacional del Café':{'adria-sangucheria':'Contenido de fuente de soda: café, sobremesa y ambiente real del local.'},
+      'Día Mundial de la Alimentación':{'adria-sushi':'Hablar desde la cocina real, ingredientes y oficio; pieza más humana que promocional.','adria-sangucheria':'Mostrar comida cotidiana, cocina y barrio desde una mirada humana.','chef-rafael':'Reflexión breve desde el oficio gastronómico y los ingredientes.'},
+      'Día Internacional del Chef':{'adria-sushi':'Mostrar a quienes cocinan detrás de Adrià y una escena real de servicio.','adria-sangucheria':'Presentar cocina y equipo en acción.','chef-rafael':'Reel o foto trabajando y una historia corta de oficio gastronómico.'},
       'Halloween':{
         'adria-sushi':'Pieza visual simple con un producto real y un giro de Halloween, sin deformar la comida.',
         'adria-sangucheria':'Antojo nocturno con estética de Halloween suave y producto real.',
@@ -122,6 +127,7 @@
       [1,1,'Año Nuevo','Inicio de año. Sirve para mensajes de apertura, horarios, nuevos proyectos o una vuelta simple al barrio.'],
       [2,14,'San Valentín','Fecha fuerte para restaurantes. Conviene usarla solo si hay una experiencia, producto o mensaje real que mostrar.'],
       [2,20,'Día del Gato','Oportunidad puntual para Adrià PET y contenido de comunidad.'],
+      [4,15,'Día de la Cocina Chilena','Fecha especialmente relevante en Chile para mostrar cocina, oficio, platos y cultura gastronómica.'],
       [3,8,'Día de la Mujer','Mejor desde comunidad, equipo o historia real; evitar promociones forzadas.'],
       [5,nthWeekday(year,5,0,2),'Día de la Madre','Fecha de alta intención gastronómica. Funciona mejor mostrando experiencia real y reserva o compra clara.'],
       [5,24,'Día del Completo','Fecha muy útil para Sanguchería Adrià. Producto protagonista y mensaje directo.'],
@@ -131,6 +137,10 @@
       [8,nthWeekday(year,8,0,2),'Día de la Niñez','Útil para contenidos familiares y experiencias de mesa, sin sobrepromocionar.'],
       [9,18,'Fiestas Patrias','Una de las fechas comerciales más importantes del mes. Mostrar cómo la vive realmente cada marca.'],
       [9,19,'Glorias del Ejército','Segundo día de Fiestas Patrias; se puede usar como continuidad si la operación y horarios lo justifican.'],
+      [9,29,'Día contra el desperdicio de alimentos','Fecha útil para mostrar prácticas reales de cocina, porcionado y aprovechamiento responsable.'],
+      [10,1,'Día Internacional del Café','Útil para sobremesa, fuente de soda y contenido de ambiente cuando el café sea parte real de la experiencia.'],
+      [10,16,'Día Mundial de la Alimentación','Fecha global para hablar de alimentos, ingredientes, cocina y personas detrás de cada preparación.'],
+      [10,20,'Día Internacional del Chef','Fecha directa para mostrar oficio, equipo de cocina y la historia de quienes preparan la comida.'],
       [10,31,'Halloween','Fecha visual y de conversación. Mejor una intervención sencilla sobre contenido real.'],
       [12,24,'Nochebuena','Mensaje humano, horarios o preparación del equipo.'],
       [12,25,'Navidad','Contenido de comunidad y agradecimiento; no necesita ser promocional.'],
