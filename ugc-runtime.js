@@ -10,8 +10,9 @@
     'adria-sangucheria':'Sanguchería Adrià',
     'pet':'Adrià PET',
     'chef-rafael':'Chef Rafael',
-    'laberinto-digital':'Laberinto Digital'
-  };
+    'laberinto-digital':'Laberinto Digital',
+    'pausa-de-origen':'Pausa de Origen'
+  }
   const SCENES={eating:'Una persona disfrutando el producto de forma espontánea.',friends:'Personas compartiendo de manera natural.',hand:'Producto real en primer plano, estilo foto de cliente.'};
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const pub=path=>STORAGE_BASE+String(path||'').split('/').map(encodeURIComponent).join('/');
