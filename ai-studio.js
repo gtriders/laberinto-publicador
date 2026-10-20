@@ -63,7 +63,7 @@
     view.innerHTML=`<section class="panel studio-panel">
       <div class="studio-head">
         <div><span class="eyebrow">ESTUDIO IA</span><h2>Mejora una foto</h2><p class="helper" style="margin:0">Usa una foto real como base. La IA pregunta solo si necesita confirmar algo.</p></div>
-        <label class="studio-brand">MARCA<select id="studioBrand"><option value="adria-sushi">Adrià Sushi</option><option value="adria-sangucheria">Sanguchería Adrià</option><option value="pet">Adrià PET</option><option value="chef-rafael">Chef Rafael</option><option value="laberinto-digital">Laberinto Digital</option></select></label>
+        <label class="studio-brand">MARCA<select id="studioBrand"><option value="adria-sushi">Adrià Sushi</option><option value="adria-sangucheria">Sanguchería Adrià</option><option value="pet">Adrià PET</option><option value="chef-rafael">Chef Rafael</option><option value="laberinto-digital">Laberinto Digital</option><option value="pausa-de-origen">Pausa de Origen</option></select></label>
       </div>
       <div class="studio-work">
         <div class="studio-step"><div class="studio-step-title"><span class="studio-step-num">1</span>Sube la foto</div><div id="studioDrop" class="studio-drop"><div id="studioSourceWrap"><strong>Elegir imagen</strong><p>Producto o fotografía real.</p></div><input id="studioFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
