@@ -1,6 +1,6 @@
 (()=>{
 const API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/laberinto-api',PIN='laberinto_session_pin';
-const brands={'adria-sushi':'Adrià Sushi','adria-sangucheria':'Sanguchería Adrià','pet':'Adrià PET','chef-rafael':'Chef Rafael','laberinto-digital':'Laberinto Digital'};
+const brands={'adria-sushi':'Adrià Sushi','adria-sangucheria':'Sanguchería Adrià','pet':'Adrià PET','chef-rafael':'Chef Rafael','laberinto-digital':'Laberinto Digital','pausa-de-origen':'Pausa de Origen'};
 let brand='adria-sushi',selected=null,imported=null,analysis=null;const seen={};
 const S=()=>seen[brand]||(seen[brand]=new Set()),pin=()=>sessionStorage.getItem(PIN)||'',esc=(s='')=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 async function call(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,pin:pin()})}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Error de conexión');return d}
