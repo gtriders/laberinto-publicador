@@ -1,5 +1,5 @@
 (() => {
-  const BRANDS={sushi:'Adrià Sushi',sangucheria:'Sanguchería Adrià',pet:'Adrià PET','chef-rafael':'Chef Rafael',laberinto:'Laberinto Digital'};
+  const BRANDS={sushi:'Adrià Sushi',sangucheria:'Sanguchería Adrià',pet:'Adrià PET','chef-rafael':'Chef Rafael',laberinto:'Laberinto Digital','pausa-de-origen':'Pausa de Origen'};
   const KEY='laberinto-publicador-v1';
   const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const formatDate=date=>{try{return new Intl.DateTimeFormat('es-CL',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(date+'T12:00:00'));}catch{return date;}};
@@ -13,7 +13,7 @@
     const headers=parseLine(lines[0]).map(h=>h.trim().toLowerCase());
     return lines.slice(1).map(line=>{const cols=parseLine(line),row={};headers.forEach((h,i)=>row[h]=cols[i]??'');return row;});
   }
-  function normalizeBrand(value=''){const x=value.toLowerCase();if(x.includes('sang'))return'sangucheria';if(x.includes('pet'))return'pet';if(x.includes('chef')||x.includes('rafael'))return'chef-rafael';if(x.includes('laber'))return'laberinto';return'sushi';}
+  function normalizeBrand(value=''){const x=value.toLowerCase();if(x.includes('sang'))return'sangucheria';if(x.includes('pet'))return'pet';if(x.includes('chef')||x.includes('rafael'))return'chef-rafael';if(x.includes('laber'))return'laberinto';if(x.includes('pausa')||x.includes('origen'))return'pausa-de-origen';return'sushi';}
   function renderLibrary(){
     const root=document.querySelector('#libraryList'),count=document.querySelector('#libraryCount');if(count)count.textContent=library.length;if(!root)return;
     const items=[...library].sort((a,b)=>((b.likes||0)+(b.comments||0))-((a.likes||0)+(a.comments||0))).slice(0,12);
