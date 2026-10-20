@@ -2,7 +2,7 @@
   const API='https://ufsxdlmnjuaymdszyjue.supabase.co/functions/v1/laberinto-api';
   const PIN_KEY='laberinto_session_pin';
   const editableStatuses=new Set(['scheduled','draft','ready','failed']);
-  const brandNames={'adria-sushi':'ADRIÀ SUSHI','adria-sangucheria':'SANGUCHERÍA ADRIÀ','pet':'ADRIÀ PET','chef-rafael':'CHEF RAFAEL','laberinto-digital':'LABERINTO DIGITAL'};
+  const brandNames={'adria-sushi':'ADRIÀ SUSHI','adria-sangucheria':'SANGUCHERÍA ADRIÀ','pet':'ADRIÀ PET','chef-rafael':'CHEF RAFAEL','laberinto-digital':'LABERINTO DIGITAL','pausa-de-origen':'PAUSA DE ORIGEN'};
   const esc=(s='')=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
   const labelStatus=s=>({scheduled:'Programada',publishing:'Publicando',failed:'Error',draft:'Borrador',ready:'Lista'}[s]||s);
   const brandLabel=id=>brandNames[id]||String(id||'CUENTA').replace(/-/g,' ').toUpperCase();
