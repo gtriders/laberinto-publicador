@@ -6,7 +6,8 @@
     'adria-sangucheria':'Sanguchería Adrià',
     'pet':'Adrià PET',
     'chef-rafael':'Chef Rafael',
-    'laberinto-digital':'Laberinto Digital'
+    'laberinto-digital':'Laberinto Digital',
+    'pausa-de-origen':'Pausa de Origen'
   };
   const getPin=()=>sessionStorage.getItem(PIN_KEY)||'';
   const call=async body=>{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,pin:getPin()})});const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||'Error de conexión');e.detail=d.detail||'';throw e;}return d;};
