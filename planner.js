@@ -35,6 +35,14 @@
       ['Educación','Un problema pyme explicado simple','Elegir un problema de marketing, WhatsApp, web o automatización.','Captura, esquema simple o pantalla real.','Aportar utilidad inmediata.'],
       ['Proceso','Así lo construimos','Mostrar antes, decisión y resultado de un proyecto.','Dos o tres capturas reales del proceso.','Hacer visible el trabajo detrás del servicio.'],
       ['Sistema','Menos tareas repetidas','Mostrar una tarea manual que se pueda ordenar o automatizar.','Foto del proceso real y captura de la solución.','Conectar dolor operacional con sistema.']
+    ]},
+    'pausa-de-origen':{name:'Pausa de Origen',ideas:[
+      ['Micropráctica','Un minuto para volver al presente','Proponer un ejercicio breve de atención a sonidos, sensaciones o respiración natural sin prometer resultados.','Plano fijo con luz suave, colores cálidos y un solo texto sencillo.','Facilitar una pausa practicable hoy.'],
+      ['Descanso','No necesitas terminarlo todo hoy','Recordar que descansar también es una decisión válida sin generar culpa.','Video de cielo o naturaleza con música suave, sin voz.','Promover hábitos sostenibles.'],
+      ['Rutina','Una pausa entre tareas','Sugerir un gesto simple de transición entre actividades.','Manos dejando una libreta o una taza, sin escenificar terapia.','Favorecer la repetición.'],
+      ['Educación','Atención plena sin complicaciones','Explicar una idea pequeña de mindfulness y cómo probarla de forma autónoma.','Tipografía legible sobre imagen serena y sin distracciones.','Aportar claridad, sin promesas clínicas.'],
+      ['Comunidad','¿Qué momento del día te pide una pausa?','Hacer una pregunta amable y abierta, sin solicitar datos sensibles.','Fotografía cotidiana natural, texto breve y espacio visual.','Invitar a guardar y conversar.'],
+      ['Guía','Un primer paso de la guía','Mostrar un ejercicio breve e invitar a conocer el ebook sin promesas exageradas.','Carrusel con una instrucción por lámina y CTA discreto.','Conectar contenido útil con la lectura del ebook.']
     ]}
   };
 
