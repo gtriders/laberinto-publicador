@@ -55,9 +55,9 @@
     if(mode==='dates'){
       const raw=$('#storyRepeatDates').value.trim();
       if(!raw)throw new Error('Escribe al menos una fecha adicional.');
-      for(const token of raw.split(/[;,\\n]+/)){
+      for(const token of raw.split(/[;,\n]+/)){
         const s=token.trim();
-        if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(s))throw new Error('Usa fechas AAAA-MM-DD separadas por coma.');
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(s))throw new Error('Usa fechas AAAA-MM-DD separadas por coma.');
         const [y,m,d]=s.split('-').map(Number),date=new Date(y,m-1,d,first.getHours(),first.getMinutes());
         if(date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d)throw new Error('Fecha inválida: '+s);
         results.push(date);
