@@ -7,6 +7,7 @@
     .ai-publisher{margin-bottom:16px}.ai-grid{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(320px,1.1fr);gap:18px}
     .upload-zone{min-height:250px;border:1px dashed #d6d3cd;border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;cursor:pointer;background:#fafaf8}
     .media-stage{display:grid;gap:10px}.media-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.media-card{position:relative;border:1px solid #e6e4df;border-radius:11px;overflow:hidden;background:#fff;cursor:grab}.media-card.dragging{opacity:.45}.media-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}.media-num{position:absolute;left:6px;top:6px;background:rgba(17,17,17,.82);color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:3px 7px}.media-remove{position:absolute;right:6px;top:6px;border:0;background:rgba(255,255,255,.92);width:26px;height:26px;border-radius:999px;cursor:pointer;font-weight:800}.media-mobile-actions{display:flex;justify-content:center;gap:6px;padding:6px}.media-move{border:1px solid #e2dfd8;background:#fff;border-radius:8px;min-width:34px;padding:4px 8px;cursor:pointer}.media-move:disabled{opacity:.35;cursor:default}.media-add{border:1px dashed #d6d3cd;background:#fafaf8;border-radius:11px;min-height:92px;cursor:pointer;font-weight:750}.media-hint{font-size:12px;color:#777}.ai-controls{display:grid;gap:11px;align-content:start}.ai-controls label{display:grid;gap:6px;font-weight:650}.ai-controls textarea{width:100%;min-height:145px}.ai-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ai-status{font-size:.88rem;color:#737373}
+    .story-repeat{padding:12px;border:1px solid #e6e4df;border-radius:12px;background:#fafaf8;display:grid;gap:10px}.story-repeat.hidden,.story-repeat .hidden{display:none}.story-repeat label{display:grid;gap:6px}.story-repeat select,.story-repeat input{width:100%;padding:9px;border-radius:9px;border:1px solid #ddd}
     .ai-badge{padding:4px 8px;border-radius:999px;background:#f1f1ee;font-size:.74rem;font-weight:700}.ai-badge.ok{background:#edf7ef;color:#28613b}.ai-badge.warn{background:#fff3d7;color:#765400}
     .queue-mini{margin-top:16px;border-top:1px solid #e8e8e5;padding-top:15px}.queue-list{display:grid;gap:0}.queue-item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;border-top:1px solid #eee;padding:10px 0}.queue-item:first-child{border-top:0}.queue-thumb{position:relative}.queue-item img{width:52px;height:52px;object-fit:cover;border-radius:9px}.queue-count{position:absolute;right:-3px;bottom:-3px;background:#111;color:#fff;border-radius:999px;font-size:10px;padding:2px 5px}.queue-item small{display:block;color:#777;margin-top:3px}.queue-state{font-size:.72rem;font-weight:800;text-transform:uppercase}.queue-state.failed{color:#a33232}.queue-state.scheduled,.queue-state.publishing,.queue-state.ready,.queue-state.draft{color:#6b5a23}.queue-error{color:#a33232!important}.pin-gate{position:fixed;inset:0;background:rgba(17,24,39,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.pin-card{width:min(420px,100%);background:white;border-radius:18px;padding:24px}.pin-card input{width:100%;font-size:1.1rem;padding:12px;margin:10px 0}
     @media(max-width:780px){.ai-grid,.ai-row{grid-template-columns:1fr}.upload-zone{min-height:190px}.media-grid{grid-template-columns:repeat(3,1fr)}.queue-item{grid-template-columns:46px 1fr}.queue-item>.queue-state{grid-column:2}}
@@ -22,6 +23,7 @@
         <label>Título<input id="aiTitle" type="text" maxlength="120"></label>
         <label>Texto listo para publicar<textarea id="aiCaption"></textarea></label>
         <div class="ai-row"><label>Fecha y hora<input id="aiSchedule" type="datetime-local"></label><label>Acción<div class="ai-actions"><button id="aiPublishNowBtn" class="btn secondary" type="button" disabled>Publicar ahora</button><button id="aiScheduleBtn" class="btn primary" type="button" disabled>Programar publicación</button></div></label></div>
+        <div id="storyRepeatBox" class="story-repeat hidden"><label>Repetición de la historia<select id="storyRepeatMode"><option value="once">Una sola vez</option><option value="weekly">Cada semana, mismo día (hasta fin de mes)</option><option value="daily">Todos los días hasta fin de mes</option><option value="dates">Elegir fechas</option></select></label><label id="storyRepeatDatesLabel" class="hidden">Fechas adicionales (AAAA-MM-DD, separadas por coma)<input id="storyRepeatDates" type="text" placeholder="2026-11-23, 2026-11-30"></label><small id="storyRepeatPreview" class="helper">Se programará una historia.</small></div>
         <div id="aiWarnings" class="helper"></div>
       </div>
     </div>
@@ -41,7 +43,80 @@
   async function uploadFiles(files){const type=$('#aiContentType')?.value||'FEED',reel=type==='REELS',story=type==='STORIES';const allowed=[...files].filter(f=>reel?['video/mp4','video/quicktime'].includes(f.type):['image/jpeg','image/png','image/webp'].includes(f.type)).slice(0,(reel||story)?1:10-mediaItems.length);if(!allowed.length)return;analysis=null;$('#aiScheduleBtn').disabled=true;for(let i=0;i<allowed.length;i++){status(`Subiendo ${i+1} de ${allowed.length}...`);mediaItems.push(await uploadOne(allowed[i]));renderMedia();}if(pendingStudioDraft)applyStudioDraft();else status(reel?'Reel cargado. Puedes escribir el copy y publicar, o usar el Planificador como guía.':story?'Historia cargada. Puedes publicarla sin copy o agregar un texto interno si quieres registrarlo.':mediaItems.length>1?`Carrusel listo con ${mediaItems.length} fotos. Puedes ordenar, analizar o escribir el copy manualmente.`:'Foto cargada. Puedes analizarla o escribir el copy manualmente.');}
   async function analyze(){if(!mediaItems.length)return;if($('#aiContentType')?.value==='REELS'){status('Reel cargado. Usa el storyboard del Planificador y ajusta el copy.');$('#aiScheduleBtn').disabled=false;return;}$('#aiAnalyzeBtn').disabled=true;status(mediaItems.length>1?'Analizando el carrusel completo...':'Analizando imagen y preparando copy...');$('#aiWarnings').textContent='';try{const d=await api({action:'analyze',brand_id:$('#aiBrand').value,media_urls:mediaItems.map(m=>m.media_url),context:$('#aiContext').value});analysis=d.analysis;$('#aiTitle').value=analysis.title||'';const tags=Array.isArray(analysis.hashtags)&&analysis.hashtags.length?'\n\n'+analysis.hashtags.join(' '):'';$('#aiCaption').value=(analysis.caption||'')+tags;const w=Array.isArray(analysis.warnings)?analysis.warnings.filter(Boolean):[];const cover=analysis.cover_recommendation?`Portada: ${analysis.cover_recommendation}`:'';$('#aiWarnings').textContent=[cover,w.length?'Revisar: '+w.join(' · '):''].filter(Boolean).join(' · ');$('#aiScheduleBtn').disabled=false;status(mediaItems.length>1?'Carrusel analizado. Revisa el orden, copy y fecha.':'Propuesta lista. Revísala y programa cuando quieras.');}catch(e){status((e.message||'Error')+(e.detail?' — '+e.detail:''));}finally{$('#aiAnalyzeBtn').disabled=false;}}
   function resetComposer(){mediaItems=[];analysis=null;pendingStudioDraft=null;if($('#aiContentType'))$('#aiContentType').value='FEED';$('#aiContext').value='';$('#aiTitle').value='';$('#aiCaption').value='';$('#aiWarnings').textContent='';renderMedia();defaultSchedule();window.dispatchEvent(new CustomEvent('laberinto:composer-reset'));}
-  async function schedule(publishNow=false){if(!mediaItems.length){status('Sube una foto, Historia, carrusel o Reel primero.');return;}const caption=$('#aiCaption').value.trim(),type=$('#aiContentType')?.value||'FEED',isReel=type==='REELS',isStory=type==='STORIES';let scheduled;if(publishNow){scheduled=new Date(Date.now()+5000);}else{const dt=$('#aiSchedule').value;scheduled=new Date(dt);if(!dt||Number.isNaN(scheduled.getTime())){status('Elige una fecha y hora válidas.');return;}if(scheduled.getTime()<=Date.now()){status('La fecha debe estar en el futuro. Para enviarlo de inmediato usa Publicar ahora.');return;}}if(!caption&&!isStory){status('Falta el texto de la publicación.');return;}const kind=isStory?'Historia':isReel?'Reel':mediaItems.length>1?`carrusel de ${mediaItems.length} fotos`:'publicación';const question=publishNow?`¿Publicar este ${kind} ahora en Instagram?`:`¿Programar este ${kind} para ${scheduled.toLocaleString('es-CL')}?`;if(!confirm(question))return;$('#aiScheduleBtn').disabled=true;if($('#aiPublishNowBtn'))$('#aiPublishNowBtn').disabled=true;status(publishNow?'Enviando a la cola de publicación…':'Programando…');try{await api({action:'schedule',brand_id:$('#aiBrand').value,title:$('#aiTitle').value,caption,media_items:mediaItems,media_url:mediaItems[0].media_url,media_path:mediaItems[0].media_path,ai_analysis:analysis||{},media_type:isStory?'STORIES':isReel?'REELS':'',scheduled_at:scheduled.toISOString()});status(publishNow?(isStory?'Historia enviada. Instagram la procesará en la próxima ejecución.':'Publicación enviada. Instagram la procesará en la próxima ejecución.'):isStory?'Historia programada.':isReel?'Reel programado.':mediaItems.length>1?'Carrusel programado.':'Publicación programada.');resetComposer();await refreshQueue();}catch(e){status((e.message||'No se pudo publicar')+(e.detail?' — '+e.detail:''));renderMedia();}}
+  // Las repeticiones crean entradas individuales en la cola existente: sin cron perpetuo.
+  function storyDates(){
+    const input=$('#aiSchedule').value;
+    const first=new Date(input);
+    if(!input||Number.isNaN(first.getTime()))throw new Error('Elige fecha y hora válidas.');
+    if(first.getTime()<=Date.now())throw new Error('La primera fecha debe estar en el futuro.');
+    const mode=$('#storyRepeatMode')?.value||'once';
+    if(mode==='once')return [first];
+    const results=[first],end=new Date(first.getFullYear(),first.getMonth()+1,0,23,59,59);
+    if(mode==='dates'){
+      const raw=$('#storyRepeatDates').value.trim();
+      if(!raw)throw new Error('Escribe al menos una fecha adicional.');
+      for(const token of raw.split(/[;,\\n]+/)){
+        const s=token.trim();
+        if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(s))throw new Error('Usa fechas AAAA-MM-DD separadas por coma.');
+        const [y,m,d]=s.split('-').map(Number),date=new Date(y,m-1,d,first.getHours(),first.getMinutes());
+        if(date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d)throw new Error('Fecha inválida: '+s);
+        results.push(date);
+      }
+    }else{
+      const cursor=new Date(first);
+      const step=mode==='weekly'?7:1;
+      while(true){cursor.setDate(cursor.getDate()+step);if(cursor>end)break;results.push(new Date(cursor));}
+    }
+    const unique=[...new Map(results.map(d=>[d.getTime(),d])).values()].sort((a,b)=>a-b);
+    if(unique.some(d=>d.getTime()<=Date.now()))throw new Error('Todas las fechas deben estar en el futuro.');
+    if(unique.length>31)throw new Error('Máximo 31 historias por programación.');
+    return unique;
+  }
+  function syncStoryRepeat(){
+    const story=$('#aiContentType')?.value==='STORIES',box=$('#storyRepeatBox');
+    if(!box)return;
+    box.classList.toggle('hidden',!story);
+    const custom=$('#storyRepeatMode')?.value==='dates';
+    $('#storyRepeatDatesLabel').classList.toggle('hidden',!custom);
+    if(!story)return;
+    try{
+      const dates=storyDates();
+      $('#storyRepeatPreview').textContent=dates.length===1?'1 historia · '+dates[0].toLocaleString('es-CL'):`${dates.length} historias · desde ${dates[0].toLocaleDateString('es-CL')} hasta ${dates[dates.length-1].toLocaleDateString('es-CL')} · misma hora`;
+    }catch(e){$('#storyRepeatPreview').textContent=e.message;}
+  }
+  async function schedule(publishNow=false){
+    if(!mediaItems.length){status('Sube una foto, Historia, carrusel o Reel primero.');return;}
+    const caption=$('#aiCaption').value.trim(),type=$('#aiContentType')?.value||'FEED',isReel=type==='REELS',isStory=type==='STORIES';
+    if(!caption&&!isStory){status('Falta el texto de la publicación.');return;}
+    let dates;
+    try{
+      if(publishNow)dates=[new Date(Date.now()+5000)];
+      else if(isStory)dates=storyDates();
+      else{
+        const dt=$('#aiSchedule').value,date=new Date(dt);
+        if(!dt||Number.isNaN(date.getTime())||date.getTime()<=Date.now())throw new Error('Elige una fecha y hora futuras.');
+        dates=[date];
+      }
+    }catch(e){status(e.message);return;}
+    const kind=isStory?'historia':isReel?'Reel':mediaItems.length>1?`carrusel de ${mediaItems.length} fotos`:'publicación';
+    const question=publishNow?`¿Publicar esta ${kind} ahora en Instagram?`:`¿Programar ${dates.length} ${dates.length===1?kind: 'historias'} entre ${dates[0].toLocaleString('es-CL')} y ${dates[dates.length-1].toLocaleString('es-CL')}?`;
+    if(!confirm(question))return;
+    $('#aiScheduleBtn').disabled=true;if($('#aiPublishNowBtn'))$('#aiPublishNowBtn').disabled=true;
+    let saved=0;
+    try{
+      for(const date of dates){
+        status(`Programando ${saved+1} de ${dates.length}…`);
+        await api({action:'schedule',brand_id:$('#aiBrand').value,title:$('#aiTitle').value,caption,media_items:mediaItems,media_url:mediaItems[0].media_url,media_path:mediaItems[0].media_path,ai_analysis:analysis||{},media_type:isStory?'STORIES':isReel?'REELS':'',scheduled_at:date.toISOString()});
+        saved++;
+      }
+      resetComposer();
+      status(publishNow?'Enviada a la cola.':`${saved} ${saved===1?'publicación programada':'publicaciones programadas'} correctamente.`);
+      await refreshQueue();
+    }catch(e){
+      status(`Se guardaron ${saved} de ${dates.length}. ${e.message||'Error de conexión'}. Revisa la cola antes de reintentar para evitar duplicados.`);
+      renderMedia();await refreshQueue().catch(()=>{});
+    }finally{if(saved!==dates.length){$('#aiScheduleBtn').disabled=false;$('#aiPublishNowBtn').disabled=false;}}
+  }
   function updateStats(items){const today=new Date().toLocaleDateString('sv-SE'),pending=items.filter(x=>['scheduled','ready','draft','failed','publishing'].includes(x.status)),todayCount=pending.filter(x=>x.scheduled_at&&new Date(x.scheduled_at).toLocaleDateString('sv-SE')===today).length;const todayNode=$('#todayCount'),scheduledNode=$('#scheduledCount');if(todayNode)todayNode.textContent=todayCount;if(scheduledNode)scheduledNode.textContent=pending.length;}
   async function refreshQueue(){
     const root=$('#aiQueue');
@@ -57,6 +132,12 @@
   $('#aiFile').addEventListener('change',e=>{if(e.target.files?.length)uploadFiles(e.target.files).catch(err=>{pendingStudioDraft=null;status(err.message);});e.target.value='';});$('#addMoreMedia').addEventListener('click',()=>$('#aiFile').click());$('#aiUploadZone').addEventListener('dragover',e=>e.preventDefault());$('#aiUploadZone').addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files?.length)uploadFiles(e.dataTransfer.files).catch(err=>status(err.message));});$('#aiContentType')?.addEventListener('change',()=>{mediaItems=[];analysis=null;pendingStudioDraft=null;renderMedia();const t=$('#aiContentType').value;status(t==='REELS'?'Sube un video MP4 o MOV.':t==='STORIES'?'Sube una imagen para la Historia.':'Sube una foto o varias para carrusel.');});$('#aiAnalyzeBtn').addEventListener('click',analyze);$('#aiPublishNowBtn')?.addEventListener('click',()=>schedule(true));$('#aiScheduleBtn').addEventListener('click',()=>schedule(false));$('#aiRefreshQueue').addEventListener('click',refreshQueue);$('#aiBrand').addEventListener('change',()=>{analysis=null;refreshStatus();if(mediaItems.length)status('Marca cambiada. Vuelve a analizar las fotos.');});
   window.addEventListener('laberinto:studio-draft',e=>{mediaItems=[];analysis=null;renderMedia();pendingStudioDraft=e.detail||null;applyStudioDraft();});
   window.addEventListener('laberinto:calendar-draft',e=>{const d=e.detail||{};if(d.brand_id){$('#aiBrand').value=d.brand_id;$('#aiBrand').dispatchEvent(new Event('change',{bubbles:true}));}$('#aiContext').value=d.context||'';$('#aiTitle').value=d.title||'';if(d.scheduled_at){const date=new Date(d.scheduled_at);$('#aiSchedule').value=new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);}status('Oportunidad comercial preparada. Sube una foto y analiza antes de programar.');document.querySelector('.ai-publisher')?.scrollIntoView({behavior:'smooth',block:'start'});});
+  $('#storyRepeatMode')?.addEventListener('change',syncStoryRepeat);
+  $('#storyRepeatDates')?.addEventListener('input',syncStoryRepeat);
+  $('#aiSchedule')?.addEventListener('change',syncStoryRepeat);
+  $('#aiContentType')?.addEventListener('change',()=>{if($('#aiContentType').value!=='STORIES')$('#storyRepeatMode').value='once';syncStoryRepeat();});
+  window.addEventListener('laberinto:composer-reset',()=>{$('#storyRepeatMode').value='once';$('#storyRepeatDates').value='';syncStoryRepeat();});
+  syncStoryRepeat();
   window.addEventListener('laberinto:token-updated',refreshStatus);
   renderMedia();if(!getPin())showGate();else{refreshStatus();refreshQueue();}
 })();
